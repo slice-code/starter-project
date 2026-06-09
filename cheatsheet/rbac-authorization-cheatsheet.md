@@ -1,350 +1,175 @@
-# RBAC Authorization Cheatsheet
-
-Referensi cepat role, menu permission, API permission, dan data isolation cabang.
+# RBAC Authorization Cheatsheet — Admin Starter
 
 ---
 
 ## 1. Mental Model
 
 ```
-login user
-  → auth.js signs JWT (role + kode_cabang)
-  → server.js requireApiAuth
-  → role-permissions.js checkApiPermission
-  → menu-config/menu_role_mapping controls menu + CRUD flags
-  → PageLoader resolves frontend CRUD permissions
-  → database/server applies branch-aware filtering
+login → JWT (role + kode_cabang)
+  → requireApiAuth (server.js)
+  → checkApiPermission (role-permissions.js)
+  → menu-config.json (menu + CRUD flags)
+  → PageLoader.resolveCrudPermissions (frontend)
+  → CrudEngine (hide create/edit/delete)
 ```
 
-| Layer | File/Tabel | Fungsi |
-|------|------------|--------|
-| JWT session | `auth.js` | simpan role + `kode_cabang` di token |
-| API matrix | `role-permissions.js` | method/resource permission |
-| Menu config | `config/menu-config.json` | menu + permission source utama jika tersedia |
-| Menu permission legacy | `menu_role_mapping` | fallback menu + CRUD flags per role/path |
-| Frontend permission | `core/page-loader.js` | ubah menu flags jadi permission CrudEngine |
-| UI RBAC | `core/rbac.js` | helper role/session di browser |
-| Menu service | `menu-config-service.js` | baca config menu role-based |
+| Layer | File |
+|------|------|
+| JWT | `auth.js` |
+| API matrix | `role-permissions.js` |
+| Menu config | `config/menu-config.json` |
+| Menu service | `menu-config-service.js` |
+| Frontend RBAC | `core/rbac.js`, `core/page-loader.js` |
 
 ---
 
-## 2. Role List
+## 2. Roles (Starter)
 
-Canonical roles:
-
-| Role | Label | Karakter |
-|------|-------|----------|
-| `super_admin` | Owner | full access semua fitur dan semua cabang |
-| `admin` | Administrator Cabang | akses operasional luas, data dibatasi cabang |
-| `bagian_bio` | Bagian Biodata | input/edit biodata dan master data biodata |
-| `bagian_foto` | Bagian Foto | akses foto/dokumen terbatas |
-| `marketing` | Marketing | agen, majikan, visa, penempatan |
-| `keuangan` | Keuangan | pembayaran, piutang, CoA, jurnal/report finance |
-| `data_master` | Data Master | master data terpusat |
-| `staff` | Staff | read-only umum |
-| `agen` | Agen PPTKIS | read-only/terbatas |
-| `blk` | Bagian BLK | modul BLK/training/UJK |
+| Role | Label | Menu |
+|------|-------|------|
+| `super_admin` | Owner | `*` (semua) |
+| `admin` | Administrator Cabang | `/`, `/categories`, `/about` |
+| `studio_admin` | Developer | `*` + studio |
 | `viewer` | Viewer | read-only |
 
-Legacy role `owner` dinormalisasi menjadi `super_admin`.
-
----
-
-## 3. Role Normalization
+Legacy `owner` → dinormalisasi ke `super_admin`.
 
 ```js
 function normalizeRole(role) {
   const r = String(role || '').trim().toLowerCase();
-  if (r === 'owner') return 'super_admin';
-  return r;
+  return r === 'owner' ? 'super_admin' : r;
 }
 ```
 
-Rules:
-
-- Selalu bandingkan role setelah normalisasi.
-- Jangan buat role baru tanpa update label, API permission, menu config, dan dashboard view.
-- `super_admin` adalah owner, bukan sekadar admin cabang.
-
 ---
 
-## 4. API Permission Matrix
-
-`role-permissions.js` punya `API_PERMISSIONS`:
-
-```js
-const API_PERMISSIONS = {
-  super_admin: {
-    '*': ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
-  },
-  keuangan: {
-    personal: ['GET'],
-    pembayaran_tki: ['GET', 'POST', 'PUT', 'PATCH'],
-    coa: ['GET', 'POST', 'PUT', 'PATCH'],
-    '*': ['GET']
-  }
-};
-```
-
-`checkApiPermission(user, resource, method)` flow:
-
-1. User/role harus ada.
-2. `users` hanya boleh non-GET tertentu untuk `super_admin`.
-3. `dashboard` dan `reports` GET-only.
-4. `menu_role_mapping` GET semua, POST hanya `super_admin`.
-5. Coba permission dari `menu-config-service` jika tersedia.
-6. Fallback ke `API_PERMISSIONS[role][resource]`.
-7. Fallback ke wildcard `API_PERMISSIONS[role]['*']`.
-8. Kalau tidak ada match, deny.
-
----
-
-## 5. Menu Permission Source
-
-Ada dua sumber menu permission:
-
-| Source | Status | Keterangan |
-|--------|--------|------------|
-| `config/menu-config.json` | preferred | read-only source untuk UI Pengaturan Menu |
-| `menu_role_mapping` | fallback/legacy | table DB untuk mapping role/path/CRUD flags |
-
-Legacy config file lain:
-
-| File | Fungsi |
-|------|--------|
-| `config/menu-permissions.json` | role → `menuPaths` + default/exceptions CRUD |
-| `scripts/setup-menu-permissions.js` | sync JSON permission ke DB |
-| `scripts/sync-menu-config.js` | sync menu config source |
-| `appjson/menu.json` | struktur/menu page definitions |
-
----
-
-## 6. menu_role_mapping Shape
-
-Field penting:
-
-| Field | Fungsi |
-|-------|--------|
-| `role` | role canonical |
-| `menu_path` | path route, contoh `/personal` |
-| `menu_name` | label menu |
-| `parent_path` | grouping menu |
-| `can_create` | allow create |
-| `can_update` | allow update |
-| `can_delete` | allow delete |
-| `is_active` | aktif/tidak |
-| `sort_order` | urutan menu |
-
-CRUD flags diubah ke format `CrudEngine`:
-
-```js
-{
-  _explicit: true,
-  create: flags.can_create ? [role] : ['__none__'],
-  read: [role],
-  update: flags.can_update ? [role] : ['__none__'],
-  delete: flags.can_delete ? [role] : ['__none__']
-}
-```
-
-Catatan penting: kolomnya `can_*`, bukan `allow_*`.
-
----
-
-## 7. Frontend Permission Flow
-
-```
-/api/menu
-  → returns sideMenu + menuPermissions
-  → index.js layout.addSideMenu(...)
-  → PageLoader.resolveCrudPermissions(...)
-  → CrudEngine.setPermissions(...)
-  → buttons/actions hidden/disabled
-```
-
-Rules:
-
-- Frontend permission hanya UX guard.
-- Backend `requireApiAuth + checkApiPermission` tetap sumber keamanan utama.
-- Kalau tombol hilang tapi API boleh, cek menu permission frontend.
-- Kalau tombol ada tapi API 403, cek backend permission.
-
----
-
-## 8. Branch Restriction
-
-Branch restricted roles:
-
-```js
-[
-  'admin',
-  'bagian_bio',
-  'bagian_foto',
-  'marketing',
-  'keuangan',
-  'staff',
-  'agen',
-  'blk'
-]
-```
-
-Access rule:
-
-```js
-function assertBranchRecordAccess(user, row) {
-  if (!user || !row) return true;
-  const role = normalizeRole(user.role);
-  if (!isBranchRestricted(role)) return true;
-  if (!user.kode_cabang || !row.kode_cabang) return true;
-  return row.kode_cabang === user.kode_cabang;
-}
-```
-
-Rules:
-
-- `super_admin` tidak dibatasi cabang.
-- Role operasional dibatasi kalau user dan row sama-sama punya `kode_cabang`.
-- Data tanpa `kode_cabang` perlu diputuskan: master global atau data bocor.
-- Master global jangan dipaksa branch-aware.
-
----
-
-## 9. Branch-Aware Tables
-
-Contoh tabel branch-aware:
-
-- `personal`
-- `datatki`
-- `personalblk`
-- `dokumen`
-- `skck`
-- `majikan`
-- `visa`
-- `paspor`
-- `medical`
-- `disnaker`
-- `pembayaran_tki`
-- `piutang_tki`
-- `pembayaran_fee_agen`
-- `spbg_keuangan_request`
-- `gaji_tki`
-- `jurnal_keuangan`
-
-Catatan:
-
-- `coa` sengaja tidak branch-aware karena master akun global.
-- Tambah tabel ke list ini hanya jika data memang milik cabang.
-
----
-
-## 10. Add Menu for Role
-
-Pattern di `config/menu-permissions.json`:
+## 3. Menu Config (`config/menu-config.json`)
 
 ```json
 {
+  "menuStructure": [ /* sidebar items */ ],
   "roles": {
-    "bagian_bio": {
-      "menuPaths": ["/", "/personal", "/keadaantki"],
+    "super_admin": {
+      "menuPaths": ["*"],
       "permissions": {
-        "default": { "can_create": 1, "can_update": 1, "can_delete": 1 },
-        "exceptions": {
-          "/personal": { "can_create": 0, "can_update": 1, "can_delete": 0 }
-        }
+        "default": { "can_create": 1, "can_update": 1, "can_delete": 1 }
+      }
+    },
+    "admin": {
+      "menuPaths": ["/", "/categories", "/about"],
+      "permissions": {
+        "default": { "can_create": 1, "can_update": 1, "can_delete": 0 }
       }
     }
   }
 }
 ```
 
-Steps:
-
-1. Pastikan page ada di `appjson/*.json` dan `appjson/menu.json` / menu config.
-2. Tambahkan path ke role `menuPaths`.
-3. Set default CRUD flags atau exception per path.
-4. Sync menu config/script sesuai source yang dipakai.
-5. Login ulang atau refresh session/menu.
-6. Test tombol UI dan API method.
+Owner-only paths (client fallback di `index.js`):
+- `/users`, `/datacabang`, `/profil-perusahaan`, `/menu-role-manager`
 
 ---
 
-## 11. Add API Permission for Role
+## 4. appjson Permissions
 
-Jika endpoint resource baru:
+Array = semua action:
 
-1. Tambahkan resource ke role di `role-permissions.js` atau menu config.
-2. Tentukan method yang boleh: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`.
-3. Jika resource masuk UI CRUD, pastikan menu permission cocok.
-4. Jika data cabang, pastikan branch-aware dan `kode_cabang`.
-5. Test role yang boleh dan role yang harus 403.
+```json
+"permissions": ["super_admin"]
+```
 
-Example:
+Per action:
+
+```json
+"permissions": {
+  "create": ["super_admin", "admin"],
+  "read": ["super_admin", "admin", "viewer"],
+  "update": ["super_admin", "admin"],
+  "delete": ["super_admin"]
+}
+```
+
+`PageLoader` menggabungkan role + menu config + appjson.
+
+---
+
+## 5. API Permission (`role-permissions.js`)
 
 ```js
-marketing: {
-  personal: ['GET'],
-  datamajikan: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-  '*': ['GET', 'POST']
-}
+const API_PERMISSIONS = {
+  super_admin: { '*': ['GET','POST','PUT','PATCH','DELETE'] },
+  studio_admin: { '*': ['GET','POST','PUT','PATCH','DELETE'] },
+  admin: {
+    categories: ['GET','POST','PUT','PATCH','DELETE'],
+    '*': ['GET','POST','PUT','PATCH']
+  },
+  viewer: { '*': ['GET'] }
+};
+```
+
+Khusus:
+- `users` → hanya `super_admin` (non-GET)
+- `dashboard`, `reports` → GET only
+
+---
+
+## 6. Branch / Cabang
+
+| Role | `kode_cabang` |
+|------|---------------|
+| `super_admin` | null = semua cabang |
+| `admin` | terikat cabang di JWT |
+| `studio_admin` | null |
+
+Field `kode_cabang` di `users` + `datacabang` schema.
+
+`BRANCH_AWARE_TABLES` di starter: `[]` (kosong — tambah resource jika perlu isolasi cabang).
+
+---
+
+## 7. Layout Page RBAC
+
+```js
+layout.addPage({
+  path: '/admin-only',
+  roles: ['super_admin'],
+  component: () => el('div').text('Admin').get()
+});
+```
+
+Menu sidebar juga bisa `roles: ['super_admin']` per item.
+
+---
+
+## 8. Sync Menu ke DB
+
+Runtime baca `config/menu-config.json` langsung.
+
+Opsional mirror PostgreSQL:
+
+```bash
+npm run menu:sync
+npm run menu:sync:dry   # preview
+npm run menu:view
 ```
 
 ---
 
-## 12. Debug 403 / Missing Menu
+## 9. Menambah Role Baru
 
-### Menu tidak muncul
-
-Cek:
-
-- Path ada di config menu?
-- Path ada di role `menuPaths`?
-- Mapping `is_active` true?
-- User role sudah canonical?
-- `/api/menu` response berisi path itu?
-
-### Tombol create/edit/delete hilang
-
-Cek:
-
-- `can_create`, `can_update`, `can_delete`.
-- `hideCreateButton` di appjson.
-- `options.permissions` di appjson.
-- `PageLoader.resolveCrudPermissions()` result.
-
-### API 403
-
-Cek:
-
-- `role-permissions.js` resource/method.
-- `menu-config-service.checkApiMethodForRole()` jika config aktif.
-- Resource name frontend sama dengan backend table/resource.
-- Method khusus seperti POST sync mungkin dipetakan ke PATCH.
+1. Tambah di `schema/users.json` enum `role`
+2. Tambah di `appjson/users.json` form options
+3. Tambah block `roles.{nama}` di `menu-config.json`
+4. Tambah di `role-permissions.js` → `API_PERMISSIONS`
+5. `npm run menu:sync`
 
 ---
 
-## 13. Security Rules
+## 10. Troubleshooting
 
-- Jangan percaya permission frontend saja.
-- Semua mutate API wajib lewat auth + permission backend.
-- Jangan beri wildcard CUD ke role sempit kecuali memang dimaksudkan.
-- Jangan expose `users` ke non-owner.
-- Jangan buka file upload tanpa auth.
-- Jangan hilangkan branch filtering untuk role operasional.
-- Jangan masukkan master global ke branch-aware tanpa alasan kuat.
-
----
-
-## 14. File Referensi
-
-| Kebutuhan | File |
-|----------|------|
-| API permission matrix | `role-permissions.js` |
-| JWT role/cabang | `auth.js` |
-| API auth gate | `server.js` |
-| Menu config service | `menu-config-service.js` |
-| JSON menu config | `config/menu-config.json` |
-| Legacy role menu permission | `config/menu-permissions.json` |
-| Menu JSON | `appjson/menu.json` |
-| Frontend RBAC | `core/rbac.js` |
-| Page permission resolver | `core/page-loader.js` |
-| DB menu mapping helpers | `database.js` |
+| Masalah | Cek |
+|--------|-----|
+| Menu tidak muncul | `menuPaths` role di menu-config |
+| CRUD action hilang | `permissions` appjson + menu role flags |
+| API 403 | `checkApiPermission`, resource name |
+| Admin lihat menu owner | `ensureOwnerMenuSidebar` di index.js |

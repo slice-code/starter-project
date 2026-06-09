@@ -1,355 +1,132 @@
-# Deployment & DevOps Cheatsheet
-
-Referensi cepat untuk menjalankan, mengonfigurasi, backup/restore, dan troubleshooting environment PJTKI Bio.
+# Deployment & DevOps Cheatsheet — Admin Starter
 
 ---
 
 ## 1. Runtime Modes
 
-| Mode | Command | Database | Keterangan |
-|------|---------|----------|------------|
-| Local simple | `npm start` | SQLite/sql.js | cepat untuk lokal tanpa PostgreSQL |
-| Local dev | `npm run dev` | sesuai `.env.local` | nodemon server.js |
-| Dev PostgreSQL | `npm run dev:db-up` + `npm run dev` | PostgreSQL port `5433` | pakai `docker-compose.dev.yml` |
-| Production Docker | `docker compose up -d --build` | PostgreSQL internal `db:5432` | app expose `APP_PORT` default `8005` |
+| Mode | Command | Database |
+|------|---------|----------|
+| Local SQLite | `npm start` | `data.db` (tanpa `DATABASE_URL`) |
+| Local dev | `npm run dev` | nodemon |
+| Dev PostgreSQL | `npm run dev:setup` lalu `npm run dev` | port `5433` |
+| Production Docker | `docker compose up -d --build` | PostgreSQL internal |
 
-Package scripts penting:
+---
+
+## 2. npm Scripts
 
 | Script | Fungsi |
 |--------|--------|
-| `npm start` | run `node server.js` |
-| `npm run dev` | run `nodemon server.js` |
-| `npm run dev:db-up` | start PostgreSQL dev container |
-| `npm run dev:db-down` | stop PostgreSQL dev container |
-| `npm run dev:db-reset` | reset PostgreSQL dev volume |
-| `npm run dev:setup` | start DB dev + copy `.env.dev` ke `.env.local` |
-| `npm run dev:full` | start DB dev lalu nodemon |
-| `npm run seed:bootstrap` | seed bootstrap data |
-| `npm run seed:menu` | seed legacy menu mapping |
-| `npm run menu:sync` | sync menu config |
-| `npm run menu:sync:dry` | preview menu sync |
+| `npm start` | `node server.js` |
+| `npm run dev` | nodemon |
+| `npm run dev:db-up` | Start PostgreSQL dev container |
+| `npm run dev:db-down` | Stop dev DB |
+| `npm run dev:db-reset` | Reset dev DB volume |
+| `npm run dev:setup` | DB up + copy `.env.dev` → `.env.local` |
+| `npm run dev:full` | DB up + nodemon |
+| `npm run seed` | bootstrap + menu:sync |
+| `npm run seed:bootstrap` | Cabang HQ + owner |
+| `npm run seed:developer` | Akun studio_admin |
+| `npm run menu:sync` | Sync menu-config → PostgreSQL |
 
 ---
 
-## 2. Production Docker Stack
-
-`docker-compose.yml` services:
-
-| Service | Container | Fungsi |
-|---------|-----------|--------|
-| `db` | `pjtki-postgres` | PostgreSQL 16 alpine |
-| `app` | `pjtki-app` | Node.js app |
-
-Network:
-
-```txt
-pjtki
-```
-
-Important mapping:
-
-```yaml
-app:
-  ports:
-    - "${APP_PORT:-8005}:3004"
-  environment:
-    DATABASE_URL: postgres://...@db:5432/...
-```
-
-Rules:
-
-- PostgreSQL production tidak diexpose ke host.
-- App connect ke DB pakai hostname internal `db`.
-- External access ke app lewat `APP_PORT`, default `8005`.
-- Container app root filesystem read-only; writable path lewat volume/tmpfs.
-
----
-
-## 3. Production Volumes
-
-| Volume/Mount | Purpose |
-|--------------|---------|
-| `pjtki_pgdata` | data PostgreSQL production |
-| `./files:/app/files` | uploaded/generated files |
-| `./data:/app/data` | local data folder |
-| `./backups:/app/backups` | backup storage |
-| `/tmp` tmpfs | runtime temp files |
-
-Rules:
-
-- Jangan simpan upload penting di dalam container filesystem non-volume.
-- Backup harus menyertakan DB dan folder file/upload.
-- Jangan delete named volume kecuali benar-benar ingin reset DB.
-
----
-
-## 4. Required Environment Variables
-
-Production essentials:
+## 3. Environment Variables
 
 | Variable | Required | Fungsi |
 |----------|----------|--------|
-| `JWT_SECRET` | yes | secret JWT; wajib production |
-| `APP_PORT` | optional | host port app, default `8005` |
-| `POSTGRES_USER` | optional | default `pjtki` |
-| `POSTGRES_PASSWORD` | optional | default `pjtki` |
-| `POSTGRES_DB` | optional | default `pjtki` |
-| `GOOGLE_API_KEY` | optional | OCR Gemini |
-| `GEMINI_OCR_MODEL` | optional | default `gemini-2.5-flash` |
+| `JWT_SECRET` | production | Secret JWT |
+| `APP_PORT` | optional | Host port Docker (default `8005`) |
+| `DATABASE_URL` | optional | PostgreSQL; kosong = SQLite |
+| `ADMIN_EMAIL` | optional | Default `admin@localhost` |
+| `ADMIN_PASSWORD` | optional | Password owner seed |
+| `APP_NAME` | optional | Branding |
+| `APP_SHOW_LOGIN_DEMO` | optional | Hint login di dev |
 
-Production JWT rule:
-
-```txt
-JWT_SECRET is required. Generate with: openssl rand -base64 64
-```
-
-Catatan:
-
-- Jangan commit secret production.
-- `.env` dibaca oleh Docker compose app service.
-- `.env.local` biasanya untuk local/dev runtime.
-- `.env.dev` dipakai setup dev PostgreSQL.
+File: `.env.local` (dev), `.env.example` (template)
 
 ---
 
-## 5. Development PostgreSQL
+## 4. Docker Production
 
-`docker-compose.dev.yml`:
+`docker-compose.yml`:
+- `db` — PostgreSQL 16
+- `app` — Node.js, port `${APP_PORT:-8005}:3004`
 
-| Item | Value |
-|------|-------|
-| service | `postgres` |
-| container | `pjtki-dev-db` |
-| image | `postgres:16-alpine` |
-| host port | `5433` |
-| container port | `5432` |
-| db | `pjtki_dev` |
-| user | `pjtki_dev` |
-| password | `dev_password_123` |
-| volume | `dev_data` |
-
-Typical flow:
+Entrypoint: `docker-entrypoint.sh` (tunggu DB → `node server.js`)
 
 ```bash
-npm run dev:db-up
-npm run dev
+docker compose up -d --build
+# http://localhost:8005
 ```
 
-Full setup:
+Volumes: `files/`, `data/`, `backups/` (jika dibuat manual)
+
+---
+
+## 5. Dev PostgreSQL
 
 ```bash
 npm run dev:setup
 npm run dev
+# DATABASE_URL di .env.local → localhost:5433
 ```
 
-Reset dev DB:
-
-```bash
-npm run dev:db-reset
-```
-
-Warning:
-
-- Reset dev DB removes dev volume data.
-- Production volume must not be reset casually.
+`docker-compose.dev.yml` — Postgres dev di port host `5433` (nama container/user masih `pjtki_*` legacy — ganti saat fork).
 
 ---
 
-## 6. Nodemon Watch Scope
+## 6. First-Time Setup
 
-`package.json` nodemon watches:
+```bash
+npm install
+cp .env.example .env.local   # atau npm run dev:setup
+npm run seed:bootstrap
+npm run menu:sync              # jika PostgreSQL
+npm run dev
+```
 
-- `server.js`
-- `load-env.js`
-- `database.js`
-- `database/`
-- `auth.js`
-- `upload-service.js`
-- `upload-types.js`
-- `letter-service.js`
-- `biodata-merge-context.js`
-- `print-surat-service.js`
-- `role-permissions.js`
-- `menu-config-service.js`
-- `config/menu-config.json`
-- `app-config.js`
-- `services/`
+Login: `admin@localhost` / `admin123` (atau `ADMIN_PASSWORD`)
 
-Ignored:
-
-- `node_modules`
-- `core`
-- `data`
-- `files`
-- `library`
-- `layouting`
-
-Implication:
-
-- Change backend/service files: nodemon restarts.
-- Change frontend `core/*` or `layouting/*`: browser reload may be enough, server may not restart.
-- Add new `appjson` page: server restart is safest because appjson index is cached.
+Developer: `npm run seed:developer` → `developer@localhost` / `dev123`
 
 ---
 
-## 7. Common Docker Commands
+## 7. Backup Manual (tanpa script .sh)
 
-Production:
-
-```bash
-docker compose up -d --build
-```
-
-Logs:
+Database PostgreSQL:
 
 ```bash
-docker compose logs -f app
+docker compose exec db pg_dump -U ${POSTGRES_USER:-pjtki} ${POSTGRES_DB:-pjtki} | gzip > backups/db_$(date +%Y%m%d).sql.gz
 ```
 
-Stop services:
+Files upload:
 
 ```bash
-docker compose down
+tar -czf backups/files_$(date +%Y%m%d).tar.gz files/ data/uploads/
 ```
-
-Dev DB:
-
-```bash
-docker compose -f docker-compose.dev.yml up -d
-```
-
-Stop dev DB:
-
-```bash
-docker compose -f docker-compose.dev.yml down
-```
-
-Do not use volume reset unless you want data loss.
 
 ---
 
-## 8. Backup & Restore Files
+## 8. Troubleshooting
 
-Scripts available:
-
-| Script | Fungsi |
+| Masalah | Solusi |
 |--------|--------|
-| `backup-db.sh` | backup database |
-| `backup-files.sh` | backup uploaded/generated files |
-| `backup-all.sh` | backup DB + files |
-| `backup-cron.sh` | cron-oriented backup wrapper |
-| `restore-db.sh` | restore database |
-| `restore-files.sh` | restore files |
-| `restore-all.sh` | restore DB + files |
-
-Backup checklist:
-
-- Backup DB.
-- Backup `files/`.
-- Backup `data/` if local DB/data mode used.
-- Store backup outside application container.
-- Test restore on dev/staging before production.
+| DB connection refused | `npm run dev:db-up`, cek `DATABASE_URL` |
+| JWT error production | Set `JWT_SECRET` |
+| Menu kosong setelah deploy | `npm run menu:sync`, cek `config/menu-config.json` |
+| Page 404 | Restart server setelah tambah appjson |
+| SQLite locked | Satu proses server saja |
 
 ---
 
-## 9. Deployment Checklist
+## 9. File Penting
 
-Before production deploy:
-
-1. Set strong `JWT_SECRET`.
-2. Confirm `.env` values.
-3. Confirm `APP_PORT` is available.
-4. Confirm `files/`, `data/`, `backups/` directories exist and writable by Docker volume mount.
-5. Run DB backup if updating existing deployment.
-6. Deploy with Docker compose.
-7. Check app logs.
-8. Login as owner/admin.
-9. Verify menu loads.
-10. Verify one CRUD list page.
-11. Verify upload/print if deployment touches files/templates.
-
----
-
-## 10. Menu/Config Sync After Deploy
-
-If menu config changed:
-
-```bash
-npm run menu:sync:dry
-npm run menu:sync
-```
-
-If using legacy menu role mapping:
-
-```bash
-npm run seed:menu
-```
-
-After sync:
-
-- Logout/login user.
-- Check `/api/menu` response.
-- Verify sidebar and CRUD buttons.
-
----
-
-## 11. AppJSON / Schema Change Deploy
-
-When adding `appjson/*.json`:
-
-- Restart app server/container.
-- Ensure menu path exists.
-- Ensure role permission allows it.
-- Browser hard refresh if page config cached client-side.
-
-When adding `schema/*.json`:
-
-- Ensure DB table exists via init/migration.
-- Add migration/backfill for existing deployments.
-- Restart app server/container.
-- Test `GET /api/resource`.
-
----
-
-## 12. Troubleshooting
-
-| Problem | Check | Fix |
-|---------|-------|-----|
-| App cannot start production | `JWT_SECRET` missing | set strong `JWT_SECRET` in `.env` |
-| App cannot connect DB | `DATABASE_URL`, service health | check db container and network `pjtki` |
-| Host cannot connect prod DB | by design DB not exposed | exec into network/container or use dev compose for host port |
-| Port already used | `APP_PORT` conflict | change `APP_PORT` |
-| Page baru tidak muncul | appjson index cached | restart app/server |
-| Upload cannot write | volume permission/path | check `./files` mount and container logs |
-| Menu tidak update | menu config not synced/session cache | run menu sync and login ulang |
-| Dev DB old data | persistent `dev_data` volume | use `npm run dev:db-reset` if safe |
-
----
-
-## 13. Safety Rules
-
-- Never reset/delete production DB volume without explicit backup and approval.
-- Never deploy production without `JWT_SECRET`.
-- Never expose PostgreSQL production port unless explicitly required and secured.
-- Never store uploaded files only inside container layer.
-- Never assume appjson/schema changes are live without restart in server mode.
-- Always test role/menu after permission config changes.
-
----
-
-## 14. File Referensi
-
-| Kebutuhan | File |
-|----------|------|
-| Production compose | `docker-compose.yml` |
-| Dev DB compose | `docker-compose.dev.yml` |
-| Docker image | `Dockerfile` |
-| Container entrypoint | `docker-entrypoint.sh` |
-| Env loader | `load-env.js` |
-| App config | `app-config.js` |
-| Package scripts | `package.json` |
-| PostgreSQL prod tuning | `postgresql-prod.conf` |
-| PostgreSQL dev tuning | `postgresql-dev.conf` |
-| Backup scripts | `backup-*.sh` |
-| Restore scripts | `restore-*.sh` |
-| Setup script | `setup-dev.sh` |
+| File | Fungsi |
+|------|--------|
+| `server.js` | HTTP server |
+| `docker-compose.yml` | Production stack |
+| `docker-compose.dev.yml` | Dev PostgreSQL |
+| `Dockerfile` | App image |
+| `docker-entrypoint.sh` | Container startup |
+| `load-env.js` | Load `.env.local` |

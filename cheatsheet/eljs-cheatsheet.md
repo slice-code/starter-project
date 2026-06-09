@@ -1,4 +1,6 @@
-# el.js Cheat Sheet
+# el.js Cheat Sheet — Admin Starter
+
+Pola DOM untuk `core/*`, `layouting/layout.js`, dan halaman JSON-driven.
 
 ## What it is
 - `el.js` is a lightweight DOM wrapper library.
@@ -203,7 +205,7 @@ listEl.load(() => {
 });
 ```
 
-Fix (append one node — used in `core/tki-report-ui.js`):
+Fix (append one node — helper umum):
 
 ```js
 function appendToEl(container, node) {
@@ -232,7 +234,7 @@ See `core/form-builder.js` — search-select dropdown uses `const resetList = ()
 
 ### Safe replace helper (`mountChildren`)
 
-Pattern from `core/biodata-detail.js` — use whenever a slot swaps entire content (tab panel, async load):
+Gunakan saat slot mengganti seluruh konten (tab panel, async load):
 
 ```js
 function mountChildren(wrapper, nodes) {
@@ -248,18 +250,18 @@ function mountChildren(wrapper, nodes) {
 }
 ```
 
-Tab switches in biodata detail call `mountChildren(tabPanelSlot, panel)` so the previous panel subtree is dropped before the new one mounts.
+Tab/panel swap: panggil `mountChildren(tabPanelSlot, panel)` agar subtree lama dibuang sebelum mount baru.
 
 ### Quill rich editor (autofocus / scroll ke alamat)
 
-Gejala: form sudah tampil, lalu ~0.5–1s kemudian halaman scroll ke field textarea/Quill (mis. `alamat`) saat value di-load.
+Gejala: form sudah tampil, lalu ~0.5–1s kemudian halaman scroll ke field textarea/Quill saat value di-load.
 
 Penyebab umum:
 - Quill di-init **sebelum** form di-mount (`.load()` saat `create()`, bukan setelah `formSlot.get()`).
 - Value di-load dengan `dangerouslyPasteHTML` → cursor/focus + browser scroll into view.
 - `window.dispatchEvent(new Event('resize'))` setelah init Quill.
 
-Pola benar (`core/biodata-tab-editor.js` + `core/rich-text-editor.js`):
+Pola benar (`core/form-builder.js` + `core/rich-text-editor.js`):
 
 ```js
 // 1. Mount form
@@ -282,13 +284,9 @@ teardownFormSlot(formSlot);
 
 Jangan stack `MutationObserver` / `setTimeout` tanpa `clearFormAutoFocusGuard(formRoot)`.
 
-### Case study: Administrasi detail (`/biodata/:id/admin`)
+### Case study: Panel dinamis (dashboard / custom page)
 
-Several admin sub-panels (FISKAL, marketing awal, tab editor) are rebuilt when data refreshes or the user re-enters a tab. Without cleanup, **detached DOM trees + stacked listeners** accumulate.
-
-**Problem:** module-level `cachedPanel` holds the last built root. Rebuilding without removing the old node leaves it in memory (still referenced + event handlers).
-
-**Fix in `core/biodata-fiskal-panel.js` and `core/biodata-markawal-panel.js`:**
+Sub-panel yang di-rebuild saat refresh data tanpa cleanup → **detached DOM + listener menumpuk**.
 
 ```js
 let cachedPanel = null;
@@ -311,12 +309,10 @@ async function loadAndRender(slot, id) {
 }
 ```
 
-Checklist for similar panels:
-- Store DOM reference only if you will `.remove()` it on the next build.
-- Call `slot.empty()` on the **parent slot** before attaching a new panel.
-- Do not keep closures over old panel nodes after replace.
-
-**Fixed in `core/biodata-tab-editor.js`:** `reload()` for status history now calls `listEl.get()` after each rebuild; `renderPanel()` flushes `actions` with `.get()`; form slots use `teardownFormSlot()` + `mountPanelChildren()` (empty → child → get) before remount.
+Checklist:
+- Simpan referensi DOM hanya jika akan `.remove()` saat build berikutnya.
+- `slot.empty()` di parent sebelum attach panel baru.
+- Form slot: `teardownFormSlot()` + `empty` → `child` → `get` sebelum remount.
 
 ### Event listeners
 

@@ -1,4 +1,6 @@
-# CRUD Builder Cheatsheet
+# CRUD Builder Cheatsheet — Admin Starter
+
+Referensi `appjson/*.json` + engine CRUD. Contoh live: `appjson/categories.json`.
 
 ## Architecture
 
@@ -62,26 +64,15 @@ core/api-client.js    → REST API client
 | `createPath` | string | Custom navigation path for create |
 | `searchPlaceholder` | string | Custom search input placeholder |
 | `defaultSort` | `{ column, direction }` | Default sort column & direction |
-| `enrichDokumen` | boolean | Add `enrich_dokumen=1` to list API |
-| `enrichDetailPekerjaan` | boolean | Add `enrich_detail_pekerjaan=1` |
-| `listDatatkiEnrich` | string\|array | Enrich datatki list (`personal`, `rekening`, etc.) |
-| `listSektorFilters` | array | Sector filter chips `[{label, prefix}]` |
-| `listStageFilters` | array | Stage filter chips `[{label, key}]` |
-| `listJenisFilters` | array | Jenis filter chips `[{label, key}]` |
-| `enableChartView` | boolean | Show chart toggle button (report pages) |
-| `reportKey` | string | Report key for report-mode pages |
-| `readOnlyReport` | boolean | Mark as read-only report page |
-| `enableRecordPdf` | boolean | Enable PDF download action |
-| `enableRecordPrint` | boolean | Enable print PDF action |
-| `enableSuratPengajuanExcel` | boolean | Enable Excel export action |
-| `printPkField` | string | Primary key field for PDF actions (default: `"id"`) |
-| `useUploadHub` | boolean | Use DocumentUploadHub for docSlot columns |
-| `pageContentPadding` | string | Override content padding (e.g. `"0"` for full-width datatable) |
-| `listInfoComponent` | string | UiBuilder component name rendered above table |
-| `listInfoProps` | object | Props for listInfoComponent |
-| `detailBiodataTab` | string | Default tab for detail action navigation |
-| `adminHistoryTab` | string | Tab for history action (default: `"keadaan_tki"`) |
-| `defaultListAction` | string | Controls behavior of special actions |
+| `listSektorFilters` | array | Filter chips opsional `[{label, prefix}]` |
+| `listStageFilters` | array | Filter chips opsional `[{label, key}]` |
+| `enableChartView` | boolean | Toggle chart (halaman report custom) |
+| `reportKey` | string | Key report custom (jika dipakai) |
+| `readOnlyReport` | boolean | Halaman report read-only |
+| `useUploadHub` | boolean | DocumentUploadHub untuk kolom dokumen |
+| `pageContentPadding` | string | Override padding konten (mis. `"0"`) |
+| `listInfoComponent` | string | Komponen UiBuilder di atas tabel |
+| `listInfoProps` | object | Props untuk listInfoComponent |
 
 ---
 
@@ -157,31 +148,14 @@ core/api-client.js    → REST API client
 }
 ```
 
-### Built-in Action Strings
+### Built-in Action Strings (starter)
 
 | String | Description |
 |--------|-------------|
-| `"edit"` | Open edit modal/page |
-| `"delete"` | Delete with confirmation |
-| `"detail"` | Navigate to biodata detail |
-| `"admin"` | Navigate to biodata admin |
-| `"keuangan"` | Navigate to keuangan detail |
-| `"upload"` | Navigate to biodata upload |
-| `"history"` | Navigate to history tab |
-| `"convert"` | Convert lead to customer |
-| `"timeline"` | Open timeline panel |
-| `"set_keadaan"` | Set TKI keadaan modal |
-| `"set_pindah_sektor"` | Move TKI sector |
-| `"set_pap"` | Set PAP UJK |
-| `"set_majikan"` | Set majikan placement |
-| `"set_detail_pekerjaan"` | Set detail pekerjaan |
-| `"create_rekening"` | Create bank account |
-| `"create_spbg_request"` | Create SPBG request |
-| `"printPdf"` | Download record PDF |
-| `"print"` | Print record PDF |
-| `"exportPinjaman"` | Export loan Excel |
-| `"mark_paid"` | Mark fee as paid |
-| `"view_jurnal"` | View journal detail |
+| `"edit"` | Buka edit modal/page |
+| `"delete"` | Hapus dengan konfirmasi |
+
+> Action domain-specific (biodata, SPBG, dll.) dihapus dari starter. Tambah custom action object atau handler di `crud-engine.js` untuk project fork.
 
 ### Custom Action Object
 
@@ -237,9 +211,9 @@ core/api-client.js    → REST API client
 | `radio` | Radio buttons | `options` |
 | `range` | Range slider | `min`, `max`, `step`, `minLabel`, `maxLabel` |
 | `section` | Section divider/header | `title`, `description` |
-| `masa_kerja_duration` | Work duration (tahun + bulan) | `bindBulan` |
-| `waktu_kerja` | Work schedule (time + days) | — |
-| `pptk_isi` | PPTK statement textarea with presets | — |
+| `masa_kerja_duration` | Durasi tahun + bulan (komposit) | `bindBulan` |
+| `waktu_kerja` | Jadwal kerja (komposit) | — |
+| `pptk_isi` | Textarea pernyataan + template | — |
 
 ### Common Field Properties
 
@@ -324,16 +298,16 @@ All selects are searchable by default. Control with:
 
 ```json
 {
-  "name": "kode_majikan",
+  "name": "parent_id",
   "type": "select",
   "optionsFrom": {
-    "resource": "majikan",
-    "value": "kode_majikan",
-    "labelFormat": "{{nama}}",
-    "filterFromField": "kode_agen",
-    "filterParam": "kode_agen"
+    "resource": "categories",
+    "value": "id",
+    "labelFormat": "{{kode}} — {{nama}}",
+    "filterFromField": "kode_cabang",
+    "filterParam": "kode_cabang"
   },
-  "waitParentLabel": "Pilih agen terlebih dahulu"
+  "waitParentLabel": "Pilih cabang terlebih dahulu"
 }
 ```
 
@@ -345,7 +319,7 @@ All selects are searchable by default. Control with:
   "type": "select",
   "multiple": true,
   "multipleDelimiter": ", ",
-  "optionsFrom": { "resource": "dataskill", "value": "isi", "labelFormat": "{{isi}}" }
+  "optionsFrom": { "resource": "categories", "value": "id", "labelFormat": "{{nama}}" }
 }
 ```
 
@@ -392,72 +366,64 @@ Shared field configurations in `appjson/form-field-presets.json`. Avoids repeati
 
 ```json
 // Field references preset by name
-{ "name": "id_biodata", "type": "text", "preset": "id_biodata" }
+{ "name": "kode_cabang", "type": "select", "preset": "kode_cabang" }
 
-// Or auto-resolved by fieldPresetByName rules:
-// Any field named "id_biodata" with type "text" → becomes searchable select
+// Atau auto-resolved lewat rules di form-field-presets.json
 ```
 
-### Built-in Presets
+### Starter presets
 
-| Preset ID | Description |
-|-----------|-------------|
-| `id_biodata` | Searchable select from `personal` (id_biodata + nama) |
-| `id_tki` | Same as id_biodata |
-| `nomor_pap` | Required text with PAP number placeholder |
-| `agency_dataagen` | Select from `dataagen` |
-| `asuransi_datanamaasuransi` | Select from `datanamaasuransi` |
-| `admin_status_pengajuan` | 6-stage submission status |
-| `admin_status_terima` | 5-stage receipt status |
-| `admin_status_berlaku` | 4-stage validity status |
-| `admin_status_proses` | 4-stage process status |
-| `admin_status_bank` | 5-stage bank status |
-| `admin_status_rekening` | 4-stage account status |
-| `admin_status_medical` | 4-stage medical result |
-| `biodata_habit_ya_tidak` | Ya/Tidak select |
-| `biodata_checklist_01` | 0/1 checklist |
+File `appjson/form-field-presets.json` kosong di starter — isi saat fork project:
+
+```json
+{
+  "version": 1,
+  "presets": {
+    "kode_cabang": {
+      "type": "select",
+      "optionsFrom": { "resource": "datacabang", "value": "kode_cabang", "labelFormat": "{{kode_cabang}} — {{nama}}" }
+    }
+  },
+  "rules": []
+}
+```
 
 ---
 
 ## Advanced Config Patterns
 
-### listResource (separate list endpoint)
+### listResource (endpoint list berbeda)
 
 ```json
 {
-  "resource": "buka_rekening_baru",
-  "listResource": "datatki",
-  "listDatatkiEnrich": ["personal", "rekening"]
+  "resource": "order_items",
+  "listResource": "orders"
 }
 ```
 
-List API calls go to `datatki` but create/edit go to `buka_rekening_baru`.
+List pakai `orders`, create/edit pakai `order_items`.
 
-### Filter Chips (Sektor + Stage)
+### Filter Chips (opsional)
 
 ```json
-"listSektorFilters": [
-  { "label": "Semua", "prefix": "" },
-  { "label": "FF Formal", "prefix": "FF" },
-  { "label": "FI Informal", "prefix": "FI" }
-],
 "listStageFilters": [
-  { "label": "Belum Rekening", "key": "belum_rekening" },
-  { "label": "Sudah Rekening", "key": "sudah_rekening" }
+  { "label": "Semua", "key": "" },
+  { "label": "Aktif", "key": "1" },
+  { "label": "Nonaktif", "key": "0" }
 ]
 ```
 
 ### Fixed (Sticky) Columns
 
 ```json
-{ "key": "id_tki", "label": "ID", "fixed": "left" },
+{ "key": "kode", "label": "Kode", "fixed": "left" },
 { "key": "actions", "type": "actions", "fixed": "right" }
 ```
 
-### Read-Only / Hidden Fields in Form
+### Read-Only Fields
 
 ```json
-{ "name": "id_tki", "type": "text", "readonly": true, "helpText": "Auto-filled" }
+{ "name": "id", "type": "text", "readonly": true, "helpText": "Auto-filled" }
 ```
 
 ### helpLink
@@ -528,12 +494,8 @@ table.resetSelection()
 | `search` | Search query |
 | `sort` | Sort column (or `col1:asc,col2:desc` for multi) |
 | `order` | Sort direction (single sort) |
-| `sektor_prefix` | Sector filter |
-| `stage_filter` | Stage filter |
-| `jenis_izin` | Jenis filter |
-| `enrich_dokumen` | `"1"` to include document data |
-| `enrich_detail_pekerjaan` | `"1"` for job detail |
-| `enrich_datatki` | Comma-separated enrichments |
+| `stage_filter` | Filter chip (jika dikonfigurasi) |
+| `sektor_prefix` | Filter chip prefix (jika dikonfigurasi) |
 
 ---
 
@@ -568,22 +530,24 @@ table.resetSelection()
 
 ---
 
-## Minimal CRUD Example
+## Minimal CRUD Example (starter)
+
+Lihat `appjson/categories.json` — salin dan ubah `resource`, `path`, `fields`, `columns`.
 
 ```json
 {
-  "path": "/dataagen",
+  "path": "/categories",
   "type": "crud",
   "config": {
-    "resource": "dataagen",
-    "title": "Agen",
-    "icon": "fas fa-user-tie",
+    "resource": "categories",
+    "title": "Kategori",
+    "icon": "fas fa-tags",
     "formDisplay": "modal",
     "table": {
       "columns": [
-        { "key": "kode_agen", "label": "Kode", "sortable": true },
+        { "key": "kode", "label": "Kode", "sortable": true },
         { "key": "nama", "label": "Nama", "sortable": true },
-        { "key": "kode_group", "label": "Group" },
+        { "key": "aktif", "label": "Status" },
         { "key": "actions", "type": "actions", "actions": ["edit", "delete"] }
       ],
       "features": { "search": true, "pagination": true, "perPage": 25 }
@@ -591,65 +555,27 @@ table.resetSelection()
     "form": {
       "columns": 2,
       "fields": [
-        { "name": "kode_agen", "label": "Kode Agen", "type": "text", "required": true },
-        { "name": "nama", "label": "Nama Agen", "type": "text", "required": true },
+        { "name": "kode", "label": "Kode", "type": "text" },
+        { "name": "nama", "label": "Nama", "type": "text", "required": true },
         {
-          "name": "kode_group",
-          "label": "Group",
+          "name": "aktif",
+          "label": "Status",
           "type": "select",
-          "optionsFrom": {
-            "resource": "datagroup",
-            "value": "kode_group",
-            "label": ["kode_group", "nama"],
-            "labelFormat": "{{kode_group}} — {{nama}}"
-          }
-        },
-        { "name": "alamat", "label": "Alamat", "type": "textarea", "colspan": 2 }
+          "default": "1",
+          "options": [
+            { "value": "1", "label": "Aktif" },
+            { "value": "0", "label": "Nonaktif" }
+          ]
+        }
       ]
     }
   },
-  "options": { "permissions": ["admin", "data_master"] }
-}
-```
-
----
-
-## Report Page Example
-
-```json
-{
-  "path": "/laporan-tki",
-  "type": "crud",
-  "config": {
-    "resource": "tki_report",
-    "reportKey": "rekap_tki",
-    "readOnlyReport": true,
-    "title": "Rekap TKI",
-    "icon": "fas fa-chart-bar",
-    "enableChartView": true,
-    "listSektorFilters": [
-      { "label": "Semua", "prefix": "" },
-      { "label": "FF", "prefix": "FF" },
-      { "label": "FI", "prefix": "FI" }
-    ],
-    "listStageFilters": [
-      { "label": "Semua Tahap", "key": "" },
-      { "label": "Pengurusan", "key": "pengurusan" }
-    ],
-    "table": {
-      "columns": [
-        { "key": "id_tki", "label": "ID TKI", "sortable": true },
-        { "key": "nama", "label": "Nama", "sortable": true },
-        {
-          "key": "status",
-          "label": "Status",
-          "type": "badge",
-          "badgeMap": {
-            "aktif": { "label": "Aktif", "bg": "#f0fdf4", "color": "#15803d", "border": "#bbf7d0" }
-          }
-        }
-      ],
-      "features": { "search": true, "pagination": true, "perPage": 25 }
+  "options": {
+    "permissions": {
+      "create": ["super_admin", "admin"],
+      "read": ["super_admin", "admin", "viewer"],
+      "update": ["super_admin", "admin"],
+      "delete": ["super_admin"]
     }
   }
 }

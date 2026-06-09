@@ -1,6 +1,6 @@
-# Form Builder Cheatsheet
+# Form Builder Cheatsheet — Admin Starter
 
-Dedicated reference for `core/form-builder.js` and how to configure forms from `appjson/*.json`.
+Referensi `core/form-builder.js` + `config.form` di `appjson/*.json`. Contoh: `appjson/categories.json`.
 
 ---
 
@@ -146,11 +146,11 @@ Example:
 
 ```json
 {
-  "name": "hp",
-  "label": "HP",
+  "name": "telepon",
+  "label": "Telepon",
   "type": "text",
-  "placeholder": "Nomor HP aktif",
-  "helpText": "Nomor kontak utama TKI."
+  "placeholder": "08xxxxxxxxxx",
+  "helpText": "Nomor kontak aktif."
 }
 ```
 
@@ -367,26 +367,26 @@ Child select waits for parent value before loading options.
 
 ```json
 {
-  "name": "kode_agen",
-  "label": "Agen",
+  "name": "kode_cabang",
+  "label": "Cabang",
   "type": "select",
   "optionsFrom": {
-    "resource": "dataagen",
-    "value": "kode_agen",
-    "labelFormat": "{{kode_agen}} — {{nama}}"
+    "resource": "datacabang",
+    "value": "kode_cabang",
+    "labelFormat": "{{kode_cabang}} — {{nama}}"
   }
 },
 {
-  "name": "kode_jenis_tki",
-  "label": "Jenis TKI",
+  "name": "parent_id",
+  "label": "Kategori Induk",
   "type": "select",
-  "waitParentLabel": "Pilih agen terlebih dahulu",
+  "waitParentLabel": "Pilih cabang terlebih dahulu",
   "optionsFrom": {
-    "resource": "dataagen_jenis_tki",
-    "value": "kode_jenis",
-    "labelFormat": "{{kode_jenis}} — {{nama}}",
-    "filterFromField": "kode_agen",
-    "filterParam": "kode_agen"
+    "resource": "categories",
+    "value": "id",
+    "labelFormat": "{{kode}} — {{nama}}",
+    "filterFromField": "kode_cabang",
+    "filterParam": "kode_cabang"
   }
 }
 ```
@@ -405,22 +405,22 @@ Quick insert adds a `+ Tambah baru` button below a select and saves a new master
 
 ```json
 {
-  "name": "agency",
-  "label": "Agency",
+  "name": "kode_cabang",
+  "label": "Cabang",
   "type": "select",
   "optionsFrom": {
-    "resource": "dataagen",
-    "value": "kode_agen",
-    "labelFormat": "{{kode_agen}} — {{nama}}"
+    "resource": "datacabang",
+    "value": "kode_cabang",
+    "labelFormat": "{{kode_cabang}} — {{nama}}"
   },
   "quickInsert": {
-    "title": "Tambah Agency",
-    "buttonLabel": "+ Tambah agency",
-    "resource": "dataagen",
-    "valueField": "kode_agen",
+    "title": "Tambah Cabang",
+    "buttonLabel": "+ Tambah cabang",
+    "resource": "datacabang",
+    "valueField": "kode_cabang",
     "fields": [
-      { "name": "kode_agen", "label": "Kode Agen", "required": true },
-      { "name": "nama", "label": "Nama Agen", "required": true }
+      { "name": "kode_cabang", "label": "Kode", "required": true },
+      { "name": "nama", "label": "Nama", "required": true }
     ]
   }
 }
@@ -572,7 +572,7 @@ Features:
 
 - Textarea with template buttons.
 - Character count preview.
-- Designed for PPTK statement text used in printed biodata.
+- Textarea pernyataan dengan template (opsional, untuk dokumen cetak custom).
 
 ---
 
@@ -580,11 +580,11 @@ Features:
 
 ```json
 {
-  "name": "nomor",
-  "label": "Nomor PAP",
+  "name": "kode",
+  "label": "Kode",
   "type": "text",
   "mask": {
-    "pattern": "000/TKI/AAA/0000/000",
+    "pattern": "AAA-0000",
     "requireComplete": true
   }
 }
@@ -625,10 +625,10 @@ Basic help:
 
 ```json
 {
-  "name": "agama",
-  "label": "Agama",
+  "name": "kategori",
+  "label": "Kategori",
   "type": "select",
-  "helpText": "Pilih dari master Agama."
+  "helpText": "Pilih dari master kategori."
 }
 ```
 
@@ -636,12 +636,12 @@ Manual help link:
 
 ```json
 {
-  "name": "agama",
-  "label": "Agama",
+  "name": "kategori",
+  "label": "Kategori",
   "type": "select",
   "helpLink": {
-    "path": "/dataagama",
-    "label": "Kelola master agama",
+    "path": "/categories",
+    "label": "Kelola kategori",
     "newTab": true
   }
 }
@@ -651,14 +651,14 @@ Auto master link:
 
 ```json
 {
-  "name": "agama",
+  "name": "kode_cabang",
   "type": "select",
   "helpMaster": true,
-  "helpMasterLabel": "Buka master agama",
+  "helpMasterLabel": "Buka master cabang",
   "optionsFrom": {
-    "resource": "dataagama",
-    "value": "isi",
-    "labelFormat": "{{isi}}"
+    "resource": "datacabang",
+    "value": "kode_cabang",
+    "labelFormat": "{{kode_cabang}} — {{nama}}"
   }
 }
 ```
@@ -706,8 +706,8 @@ Special validation:
 
 ```json
 {
-  "name": "id_biodata",
-  "label": "ID Biodata",
+  "name": "id",
+  "label": "ID",
   "type": "text",
   "readonly": true,
   "disabled": true,
@@ -734,9 +734,9 @@ Use explicit preset:
 
 ```json
 {
-  "name": "id_biodata",
-  "preset": "id_biodata",
-  "label": "TKI",
+  "name": "kode_cabang",
+  "preset": "kode_cabang",
+  "label": "Cabang",
   "required": true
 }
 ```
@@ -746,10 +746,10 @@ Page-level mapping:
 ```json
 "form": {
   "fieldPresetByName": {
-    "agency": "agency_dataagen"
+    "kode_cabang": "kode_cabang"
   },
   "fields": [
-    { "name": "agency", "required": true }
+    { "name": "kode_cabang", "required": true }
   ]
 }
 ```
@@ -758,9 +758,7 @@ Global preset mapping:
 
 ```json
 "fieldPresetByName": {
-  "id_biodata": "id_biodata",
-  "id_tki": "id_tki",
-  "nomor": "nomor_pap"
+  "kode_cabang": "kode_cabang"
 }
 ```
 
@@ -768,8 +766,8 @@ Auto rules example:
 
 ```json
 {
-  "match": { "name": "id_biodata", "type": "text" },
-  "preset": "id_biodata"
+  "match": { "name": "kode_cabang", "type": "select" },
+  "preset": "kode_cabang"
 }
 ```
 
@@ -790,16 +788,16 @@ A form can mount `DocumentUploadHub` and sync the latest uploaded file into a fo
 "form": {
   "columns": 2,
   "linkedUpload": {
-    "label": "Upload dokumen PK",
-    "textInfo": "Upload file terkait ID biodata.",
-    "idBiodataField": "id_biodata",
-    "uploadType": "upload_pk",
-    "syncFileField": "file_pk",
-    "emptyText": "Isi ID biodata terlebih dahulu."
+    "label": "Upload dokumen",
+    "textInfo": "Upload file terkait record ini.",
+    "idBiodataField": "id",
+    "uploadType": "upload_document",
+    "syncFileField": "file_path",
+    "emptyText": "Simpan record terlebih dahulu atau isi ID."
   },
   "fields": [
-    { "name": "id_biodata", "preset": "id_biodata", "required": true },
-    { "name": "file_pk", "label": "File PK", "type": "text", "readonly": true }
+    { "name": "id", "type": "text", "readonly": true },
+    { "name": "file_path", "label": "File", "type": "text", "readonly": true }
   ]
 }
 ```

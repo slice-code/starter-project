@@ -1,4 +1,6 @@
-# Layout.js Cheatsheet
+# Layout.js Cheatsheet — Admin Starter
+
+Shell UI: sidebar, navbar, routing, tema, notifikasi. Branding dari `app-config.js` / `layout.setNavbarTitle()`.
 
 ## Quick Start
 
@@ -60,27 +62,25 @@ layout.addPage({
 // Tidak perlu layout.addPage() — trigger global function
 
 // Contoh URL:
-// /personal/create
-// /personal/edit/123
-// /majikan/create?id_tki=456
+// /categories/create
+// /categories/edit/5
+// /products/create?kode=CAT-001
 
 // Register handler global:
 window.triggerCrudCreate = function(resource, prefill) {
-  // resource: 'personal', 'majikan', dll
-  // prefill: { id_tki: '456' } dari query params
+  // resource: 'categories', 'products', dll
+  // prefill: { kode: 'CAT-001' } dari query params
   console.log('Create', resource, prefill);
 };
 
 window.triggerCrudEdit = function(resource, id) {
-  // resource: 'personal', 'majikan', dll
-  // id: '123' dari URL path
   console.log('Edit', resource, id);
 };
 
 // Check route type:
-layout.isValidRoute('/personal');           // true jika terdaftar
-layout.isCrudDynamicRoute('/personal/create'); // true
-layout.isCrudDynamicRoute('/personal/edit/123'); // true
+layout.isValidRoute('/categories');
+layout.isCrudDynamicRoute('/categories/create');
+layout.isCrudDynamicRoute('/categories/edit/5');
 ```
 
 ### Navigation
@@ -384,7 +384,7 @@ layout.hideAuthBootstrapLoader();
 │                                 │
 │      [spinner berputar]         │
 │                                 │
-│      PJTKI Bio                  │
+│      Admin Starter              │
 │      Memuat aplikasi...         │
 │                                 │
 └─────────────────────────────────┘
@@ -541,14 +541,14 @@ Sidebar dirender otomatis oleh `layout.addSideMenu()` + `renderSideMenu()`.
 ### Struktur visual
 ```
 ┌─────────────────────────┐
-│ [icon] PJTKI Bio        │  ← brand (navbarTitle + "Manajemen TKI")
-│      MANAJEMEN TKI      │
+│ [icon] Admin Starter    │  ← brand (navbarTitle dari app-config)
+│      PANEL ADMIN        │
 ├─────────────────────────┤
 │ 🔍 Cari menu…    Ctrl+K │
 ├─────────────────────────┤
 │ NAVIGASI                │
 │ [icon] Dashboard        │  ← item aktif: accent bar kiri
-│ [icon] Personal      ▾  │  ← dropdown + sub-item indent
+│ [icon] Data          ▾  │  ← dropdown + sub-item indent
 │   · Sub menu            │
 └─────────────────────────┘
 ```
@@ -575,7 +575,7 @@ Accent aktif memakai CSS variable **`--sidebar-accent`** (diset saat `setTheme()
 
 ### Brand title
 ```javascript
-layout.setNavbarTitle('PJTKI Malang');  // Update navbar + sidebar brand
+layout.setNavbarTitle('My Company');  // Update navbar + sidebar brand
 ```
 
 ---
@@ -614,7 +614,7 @@ Saat buka modal apapun, layout memanggil `FormBuilder.closeAllSearchSelects()` j
 
 ## Notifikasi Navbar
 
-Alert operasional TKI — ikon **bell** di sebelah kiri ikon user.
+Notifikasi aplikasi — ikon **bell** di sebelah kiri ikon user. Data dari tabel `app_notifications` via API.
 
 ### Inisialisasi (setelah login)
 ```javascript
@@ -631,23 +631,21 @@ GET /api/notifications?limit=15
 Response item:
 ```javascript
 {
-  id: 'medical-FF-0001',
+  id: '1',
   type: 'info',           // info | warning | success
-  title: 'Medical — belum terbang',
-  message: 'Siti Aminah (FF-0001) sudah medical, belum departure.',
-  link: '/biodata/FF-0001',
-  createdAt: '2026-05-18'
+  title: 'Selamat datang',
+  message: 'Admin Starter siap digunakan.',
+  link: '/dashboard',
+  createdAt: '2026-06-09'
 }
 ```
 
-Sumber data (per cabang jika role cabang):
-- Ringkasan TKI **Pending** / **Proses**
-- Medical belum terbang (max 5)
-- Tgl online disnaker ≤ 14 hari (max 5)
-- Biodata baru (3 terakhir)
+Sumber data starter:
+- Baris aktif di `app_notifications` (filter cabang jika user punya `kode_cabang`)
+- Ringkasan dashboard opsional dari `GET /api/dashboard`
 
 ### Status dibaca
-- Disimpan di **`localStorage`** key `pjtki-notif-read` (array id notifikasi)
+- Disimpan di **`localStorage`** key `pjtki-notif-read` (legacy key — array id notifikasi)
 - Klik item → tandai dibaca + `layout.navigate(link)`
 - Tombol **Tandai dibaca** → mark all read
 
@@ -695,14 +693,14 @@ layout.setTheme('purple');    // Purple
 layout.setTheme('green');     // Green
 layout.setTheme('red');       // Red
 layout.setTheme('orange');    // Orange
-layout.setTheme('teal');      // Teal — rekomendasi PJTKI Bio
+layout.setTheme('teal');      // Teal — default starter (index.js)
 layout.setTheme('pink');      // Pink
 layout.setTheme('gray');      // Gray
 ```
 
-### Tema PJTKI Bio (teal)
+### Tema default starter (teal)
 ```javascript
-// Default di index.js: theme: 'teal' (teal-blue / cyan)
+// Default di index.js: theme: 'teal'
 layout.setTheme('teal');
 // Navbar: #0e7490 (cyan-700)
 // Sidebar: #155e75 (cyan-800)
@@ -909,8 +907,8 @@ layout.addPage({
 
 ### Route helpers
 ```javascript
-layout.isValidRoute('/personal');           // Terdaftar (termasuk pola dinamis)
-layout.isCrudDynamicRoute('/personal/create'); // /resource/create atau /resource/edit/:id
+layout.isValidRoute('/categories');
+layout.isCrudDynamicRoute('/categories/create');
 layout.resetPageScroll();                   // Scroll window + pagecontent ke atas
 ```
 
@@ -932,7 +930,7 @@ layout.addNavbar([
   { name: 'Profile', page: '/profile' }
 ]);
 
-// 3. Set theme (optional — PJTKI Bio: 'teal')
+// 3. Set theme (default starter: 'teal')
 layout.setTheme('teal');
 
 // 4. Set role (optional)
@@ -948,7 +946,7 @@ layout.render();
 layout.initNotifications();
 ```
 
-### Bootstrap PJTKI Bio (pola index.js)
+### Bootstrap Admin Starter (pola index.js)
 ```javascript
 async function bootstrapAuthenticatedApp(core, user) {
   layout.setRole(user.role);
@@ -961,6 +959,7 @@ async function bootstrapAuthenticatedApp(core, user) {
   await PageLoader.bootstrap(core);
   layout.initNotifications();
 }
+// Global: window.adminApp.bootstrapAuthenticatedApp
 ```
 
 ### Complete Example
@@ -1194,7 +1193,7 @@ const hideSidebar = pageConfig?.fullWidthDesktop || pageConfig?.hideLayout || au
 ```javascript
 // Setiap theme punya accent color untuk sidebar active state:
 const accents = {
-  teal:     '#41c38c',  // Hijau teal (rekomendasi PJTKI Bio)
+  teal:     '#41c38c',  // Hijau teal (default starter)
   blue:     '#93c5fd',  // Biru muda
   green:    '#86efac',  // Hijau muda
   purple:   '#d8b4fe',  // Ungu muda
@@ -1365,4 +1364,4 @@ layout.addPage({
 ## Version
 
 Built for el.js v1.0.6  
-Layout Engine — PJTKI Bio (teal sidebar, notifikasi, Quick Open menu)
+Layout Engine — Admin Starter (teal sidebar, notifikasi, Quick Open menu)
