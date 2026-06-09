@@ -39,14 +39,25 @@ admin-starter/
 index.html
   → el.js
   → layouting/layout.js
-  → core/core.js
-  → core/page-loader.js
-  → core/crud-engine.js
-  → core/form-builder.js
-  → core/table-builder.js
-  → core/ui-builder.js
-  → core/dashboard-ui.js
-  → index.js
+  → core/dynamic-loader.js (Memuat core scripts & index.js secara sekuensial)
+      → core/script-loader.js
+      → core/api-client.js
+      → core/auth-client.js
+      → core/rich-text-editor.js
+      → core/input-mask.js
+      → core/form-builder.js
+      → core/form-field-presets.js
+      → core/table-builder.js
+      → core/pjtki-theme.js
+      → core/timeline-panel.js
+      → core/crud-engine.js
+      → core/kanban-engine.js
+      → core/ui-builder.js
+      → core/dashboard-ui.js
+      → core/rbac.js
+      → core/page-loader.js
+      → core/core.js
+      → index.js
 ```
 
 Lazy load (via `CoreScriptLoader`):

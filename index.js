@@ -228,7 +228,7 @@ async function bootstrapAuthenticatedApp(core, user) {
   core._pagesBootstrapped = true;
 }
 
-window.addEventListener('DOMContentLoaded', async () => {
+async function initApp() {
   await loadAppBranding();
 
   const currentHash = () => {
@@ -267,7 +267,13 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
     ensureAuthenticatedNavbarRendered(core);
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 
 function loadHardcodedPages(core, sessionUser) {
   if (sessionUser) {

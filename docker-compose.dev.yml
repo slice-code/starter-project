@@ -2,11 +2,11 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: pjtki-dev-db
+    container_name: starterdb-db
     environment:
       POSTGRES_USER: pjtki_dev
       POSTGRES_PASSWORD: dev_password_123
-      POSTGRES_DB: pjtki_dev
+      POSTGRES_DB: starterdb
     ports:
       - "5433:5432"
     volumes:

@@ -7,16 +7,73 @@ const database = require("./database");
 const auth = require("./auth");
 const uploadService = require("./upload-service");
 const { HUB_TYPES } = require("./upload-types");
-const letterService = require("./letter-service");
-const biodataPdf = require("./services/biodata-pdf");
-const printSuratService = require("./print-surat-service");
-const geminiOcr = require("./services/gemini-ocr");
 const imageCompress = require("./services/image-compress");
 const appConfig = require("./app-config");
 const rolePermissions = require("./role-permissions");
 const menuConfigService = require("./menu-config-service");
-const blkPersonalService = require("./services/blk-personal-service");
-const blkUjkService = require("./services/blk-ujk-service");
+
+// Inline stubs for legacy services from biodata project
+const letterService = {
+  buildMergeContext: () => ({}),
+  resolveTemplateFile: (p) => p,
+  mergeDocxFileToPdf: async () => Buffer.from([]),
+  pickBiodataDocKode: () => 'default',
+  pickBiodataTemplateKode: () => 'default',
+  mergeHtmlTemplate: () => '',
+  convertDocxBufferToPdf: async () => Buffer.from([]),
+  resolveAutoBiodataKode: () => 'default',
+  mergeDocxFileAsync: async () => Buffer.from([]),
+  FILES_DIR: path.join(__dirname, 'files')
+};
+
+const biodataPdf = {
+  isBiodataTemplate: () => false,
+  generateBiodataPdf: async () => Buffer.from([])
+};
+
+const geminiOcr = {
+  runOcr: async () => { throw new Error('OCR tidak tersedia di starter template'); }
+};
+
+const blkPersonalService = {
+  findPersonalblkByBiodata: async () => null,
+  sanitizePersonalblkPayload: (data) => data,
+  prepareBlkIzinPulangPayload: async (db, data) => data,
+  prepareBlkIzinPayload: async (db, data) => data,
+  sanitizeBlkAnakPayload: (data) => data,
+  notifyBlkIzinPulangChange: async () => {},
+  notifyBlkIzinChange: async () => {},
+  listPersonalCandidates: async () => ({ data: [] }),
+  importPersonalblkFromPersonalBatch: async () => ({ imported: 0, errors: [] }),
+  buildPersonalblkFromPersonal: async () => ({})
+};
+
+const blkUjkService = {
+  UJK_RESOURCE_SET: new Set(),
+  prepareResource: async (db, res, data) => data,
+  afterUjkMutation: async () => {},
+  notifyUjkChange: async () => {}
+};
+
+const printSuratService = {
+  loadConfig: () => ({ templates: [], ijinBatch: {} }),
+  listTemplateFilesOnDisk: () => [],
+  syncProductionTemplates: () => {},
+  ensureRecordPrintTemplates: () => {},
+  buildBatchPdfPayload: async () => ({}),
+  buildPapBatchPdfPayload: async () => ({}),
+  resolveKodeForBatch: () => 'default',
+  buildBatchMergeContextAsync: async () => ({}),
+  mergeTemplate: () => '',
+  buildRekomTabunganPdfPayload: async () => ({}),
+  buildRekomIjinBatchPdfPayload: async () => ({}),
+  buildRecordPdfPayload: async () => ({}),
+  streamStaticTemplate: () => '',
+  exportSuratPengajuanExcel: async () => Buffer.from([]),
+  resolveKodeForRecordAsync: async () => 'default',
+  buildRecordContext: async () => ({}),
+  buildRekomIjinBatchContextAsync: async () => ({})
+};
 const StudioService = require("./services/studio-service");
 
 const PORT = parseInt(process.env.PORT || "3004", 10);

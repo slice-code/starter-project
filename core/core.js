@@ -214,7 +214,16 @@
     addPage(path, schema, config = {}) {
       layout.addPage({
         path: path,
-        component: () => {
+        component: async () => {
+          // Dynamic dependency loading controlled via JSON
+          const scripts = config.scripts || config.libraries || schema.scripts || schema.libraries;
+          if (typeof CoreScriptLoader !== 'undefined' && scripts) {
+            const arr = Array.isArray(scripts) ? scripts : (typeof scripts === 'string' && scripts.trim() ? [scripts.trim()] : []);
+            if (arr.length) {
+              await CoreScriptLoader.loadMany([...new Set(arr)]);
+            }
+          }
+
           // Auto-wrap schema with type: 'page' if not present
           const pageSchema = schema.type ? schema : { type: 'page', ...schema };
           
@@ -271,7 +280,16 @@
       if (crudSchema.viewType === 'kanban' || crudSchema.kanban) {
         layout.addPage({
           path: path,
-          component: () => {
+          component: async () => {
+            // Dynamic dependency loading controlled via JSON
+            const scripts = config.scripts || config.libraries || crudSchema.scripts || crudSchema.libraries;
+            if (typeof CoreScriptLoader !== 'undefined' && scripts) {
+              const arr = Array.isArray(scripts) ? scripts : (typeof scripts === 'string' && scripts.trim() ? [scripts.trim()] : []);
+              if (arr.length) {
+                await CoreScriptLoader.loadMany([...new Set(arr)]);
+              }
+            }
+
             const viewKey = `crm_view_${resource}`;
             let currentView = localStorage.getItem(viewKey) || 'kanban';
 
@@ -387,7 +405,16 @@
         // Regular CRUD table view
         layout.addPage({
           path: path,
-          component: () => {
+          component: async () => {
+            // Dynamic dependency loading controlled via JSON
+            const scripts = config.scripts || config.libraries || crudSchema.scripts || crudSchema.libraries;
+            if (typeof CoreScriptLoader !== 'undefined' && scripts) {
+              const arr = Array.isArray(scripts) ? scripts : (typeof scripts === 'string' && scripts.trim() ? [scripts.trim()] : []);
+              if (arr.length) {
+                await CoreScriptLoader.loadMany([...new Set(arr)]);
+              }
+            }
+
             const pagePermissions = this.resolveCrudPermissionsForPage(path, crudSchema, config);
             const crud = CrudEngine.build(crudSchema, {
               apiClient: this.apiClient,

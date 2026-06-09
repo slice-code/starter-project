@@ -11,7 +11,14 @@ const { HUB_TYPES, ALL_TYPES, isAllowed } = require("./upload-types");
 const bcrypt = require("bcryptjs");
 const pgDriver = require("./database/pg-driver");
 const appConfig = require("./app-config");
-const biodataMenuConfig = require("./biodata-menu-config");
+// Inline stubs for legacy services
+const biodataMenuConfig = {
+  menuKeysToTabRows: () => [],
+  getSectorMenuKeys: () => [],
+  getAllowedMenuUrls: () => [],
+  getAllSectorCodes: () => []
+};
+
 const {
   DASHBOARD_ROLES,
   normalizeRole,
@@ -32,10 +39,14 @@ const SCHEMA_DIR = path.join(__dirname, "schema");
 let sqlDb = null;
 let db = null;
 let dialect = "sqlite";
-let _idTkiService = null;
+
+const _idTkiService = {
+  resolveActiveIdBiodata: async () => null,
+  isIdTki: () => false,
+  ensureIdTkiBackfill: async () => ({})
+};
 
 function getIdTkiService() {
-  if (!_idTkiService) _idTkiService = require("./services/id-tki-service");
   return _idTkiService;
 }
 

@@ -35,11 +35,20 @@ index.js
 
 ```js
 // index.js
-window.adminApp = { core, bootstrapAuthenticatedApp, ... };
-registerLoginPage(core);
-await bootstrapAuthenticatedApp(core, sessionUser);
-core.init();
+async function initApp() {
+  await loadAppBranding();
+  ...
+  core.init();
+}
+
+if (document.readyState === 'loading') {
+  window.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
 ```
+
+*Catatan: `index.js` dieksekusi setelah dimuat secara dinamis oleh `dynamic-loader.js`. Karena event `DOMContentLoaded` kemungkinan besar sudah terpicu sebelum `index.js` dievaluasi, proses inisialisasi menggunakan pengecekan `document.readyState` agar berjalan secara langsung.*
 
 1. `loadAppBranding()` → `/api/app-config`
 2. `CrmAuth.me()` → redirect `#/login` jika belum auth
@@ -72,9 +81,12 @@ slot.load(() => { /* post-mount */ });
 
 ---
 
-## 4. Lazy Load Scripts
+## 4. Lazy Load & Dynamic Script Loader
 
-Jangan tambah `<script src="core/baru.js">` di `index.html`.
+Jangan tambah `<script src="core/baru.js">` di `index.html`. 
+
+* **Core Scripts**: Jika ingin menambah core script default yang selalu dimuat sejak awal, daftarkan file tersebut ke array `SCRIPTS` di `/core/dynamic-loader.js`.
+* **Feature/Page-specific Scripts**: Daftarkan di `/index.js` pada object `FEATURE_SCRIPTS` untuk dimuat secara dinamis (lazy load) saat role/halaman tertentu diakses:
 
 ```js
 // index.js — FEATURE_SCRIPTS
@@ -83,6 +95,22 @@ studio: ['./core/studio-*.js', ...]
 ```
 
 `CoreScriptLoader.loadMany()` dipanggil dari `loadFeatureScripts()` berdasarkan role/menu.
+
+* **JSON-Controlled Page Scripts**: Jika halaman/CRUD tertentu membutuhkan library/script eksternal khusus (misalnya `/library/chart.js`), Anda dapat mendefinisikannya langsung di dalam file JSON halaman tersebut di bawah properti `"scripts"` atau `"libraries"` (di root level, di `"options"`, atau di `"config"`). Loader akan memuatnya secara otomatis sebelum halaman dirender:
+
+```json
+{
+  "path": "/keuangan",
+  "type": "crud",
+  "libraries": [
+    "./library/accounting.min.js",
+    "./library/chart.min.js"
+  ],
+  "config": {
+    "resource": "keuangan"
+  }
+}
+```
 
 ---
 

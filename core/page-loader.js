@@ -270,6 +270,15 @@
       if (pageConfig.path === '/') {
         scripts.push('./core/dashboard-ui.js?v=20260520f');
       }
+
+      // Load custom scripts or libraries defined in JSON configuration
+      const customLibs = pageConfig.scripts || pageConfig.options?.scripts || cfg.scripts || pageConfig.libraries || pageConfig.options?.libraries || cfg.libraries;
+      if (Array.isArray(customLibs)) {
+        scripts.push(...customLibs);
+      } else if (typeof customLibs === 'string' && customLibs.trim()) {
+        scripts.push(customLibs.trim());
+      }
+
       if (scripts.length) await CoreScriptLoader.loadMany([...new Set(scripts)]);
     },
 

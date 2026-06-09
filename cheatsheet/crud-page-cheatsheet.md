@@ -92,6 +92,32 @@ Atau pakai **Studio** → CRUD Manager (tanpa edit file manual).
 
 ---
 
+## Memuat Library/Script Kustom (Page-Specific Libraries)
+
+Jika halaman CRUD atau custom page tertentu membutuhkan library atau script kustom (misalnya library kalkulasi keuangan, grafik, xlsx, dll), daftarkan file script tersebut di dalam JSON halaman (`appjson/resource.json`) menggunakan properti `"libraries"` atau `"scripts"`.
+
+Dengan cara ini, library tersebut **hanya akan dimuat ketika halaman tersebut dibuka**, sehingga menghemat resource memori saat startup.
+
+### Contoh (`appjson/products.json`):
+```json
+{
+  "path": "/products",
+  "type": "crud",
+  "libraries": [
+    "./library/accounting.min.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"
+  ],
+  "config": {
+    "resource": "products",
+    "title": "Produk"
+  }
+}
+```
+
+*Catatan: File script lokal ditulis relatif terhadap root (`./library/...` atau `./core/...`), sedangkan link eksternal menggunakan URL penuh.*
+
+---
+
 ## Starter Pages (Referensi)
 
 | Route | Resource | File |
