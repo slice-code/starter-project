@@ -39,10 +39,10 @@
   },
   "options": {
     "permissions": {
-      "create": ["super_admin", "admin", "studio_admin"],
-      "read": ["super_admin", "admin", "studio_admin", "viewer"],
-      "update": ["super_admin", "admin", "studio_admin"],
-      "delete": ["super_admin", "studio_admin"]
+      "create": ["admin"],
+      "read": ["admin"],
+      "update": ["admin"],
+      "delete": ["admin"]
     }
   }
 }

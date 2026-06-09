@@ -11,10 +11,7 @@
       "type": "enum",
       "required": true,
       "options": [
-        { "value": "super_admin", "label": "Owner" },
-        { "value": "admin", "label": "Administrator Cabang" },
-        { "value": "studio_admin", "label": "Developer" },
-        { "value": "viewer", "label": "Viewer" }
+        { "value": "admin", "label": "Administrator" }
       ]
     },
     { "name": "phone", "type": "text" },

@@ -1,65 +1,40 @@
 /**
  * API permission matrix — Admin Starter template
  */
-const BRANCH_RESTRICTED_ROLES = ['admin'];
+const BRANCH_RESTRICTED_ROLES = [];
 
 const BRANCH_AWARE_TABLES = [];
 
 const ROLES_CAN_CREATE_TKI = [];
 
 const API_PERMISSIONS = {
-  super_admin: {
-    '*': ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
-  },
-  studio_admin: {
-    studio: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    schema: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    pages: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    menu: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    config: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    appjson: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    '*': ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
-  },
   admin: {
-    categories: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
-    datacabang: ['GET'],
-    '*': ['GET', 'POST', 'PUT', 'PATCH']
-  },
-  viewer: {
-    '*': ['GET']
+    '*': ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']
   }
 };
 
 const ROLE_LABELS = {
-  super_admin: 'Owner',
-  owner: 'Owner',
-  admin: 'Administrator Cabang',
-  studio_admin: 'Developer',
-  viewer: 'Viewer'
+  admin: 'Administrator'
 };
 
 function normalizeRole(role) {
-  const r = String(role || '').trim().toLowerCase();
-  if (r === 'owner') return 'super_admin';
-  return r;
+  return 'admin';
 }
 
 function getRoleLabel(role) {
-  const r = normalizeRole(role);
-  return ROLE_LABELS[r] || r || '—';
+  return 'Administrator';
 }
 
 function isOwnerRole(role) {
-  return normalizeRole(role) === 'super_admin';
+  return true;
 }
 
 function isAdminCabangRole(role) {
-  return normalizeRole(role) === 'admin';
+  return true;
 }
 
 function hasFullOperationalAccess(role) {
-  const r = normalizeRole(role);
-  return r === 'super_admin' || r === 'admin';
+  return true;
 }
 
 function checkApiPermission(user, resource, method) {
@@ -67,7 +42,7 @@ function checkApiPermission(user, resource, method) {
 
   const role = normalizeRole(user.role);
 
-  if (resource === 'users' && role !== 'super_admin') {
+  if (resource === 'users' && role !== 'admin') {
     return false;
   }
 
@@ -77,7 +52,7 @@ function checkApiPermission(user, resource, method) {
 
   if (resource === 'menu_role_mapping') {
     if (method === 'GET') return true;
-    return role === 'super_admin' && method === 'POST';
+    return role === 'admin' && method === 'POST';
   }
 
   try {
@@ -105,56 +80,19 @@ function checkApiPermission(user, resource, method) {
 }
 
 function isBranchRestricted(role) {
-  return BRANCH_RESTRICTED_ROLES.includes(normalizeRole(role));
+  return false;
 }
 
 function assertBranchRecordAccess(user, row) {
-  if (!user || !row) return true;
-  const role = normalizeRole(user.role);
-  if (!isBranchRestricted(role)) return true;
-  const userBranch = user.kode_cabang;
-  if (!userBranch || !row.kode_cabang) return true;
-  return row.kode_cabang === userBranch;
+  return true;
 }
 
-const DASHBOARD_ROLES = ['super_admin', 'admin', 'studio_admin', 'viewer'];
+const DASHBOARD_ROLES = ['admin'];
 
 const DASHBOARD_VIEW_BY_ROLE = {
-  super_admin: {
+  admin: {
     title: 'Dashboard',
     subtitle: 'Ringkasan sistem admin.',
-    sections: [],
-    featuredKpis: [],
-    secondaryKpis: [],
-    charts: [],
-    heroActions: [],
-    quickLinks: []
-  },
-  admin: {
-    title: 'Dashboard Cabang',
-    subtitle: 'Ringkasan cabang Anda.',
-    sections: [],
-    featuredKpis: [],
-    secondaryKpis: [],
-    charts: [],
-    heroActions: [],
-    quickLinks: []
-  },
-  studio_admin: {
-    title: 'Dashboard Developer',
-    subtitle: 'Studio CRUD & schema manager.',
-    sections: [],
-    featuredKpis: [],
-    secondaryKpis: [],
-    charts: [],
-    heroActions: [
-      { label: 'CRUD Manager', icon: 'fas fa-hammer', path: '/studio/crud-manager', variant: 'primary' }
-    ],
-    quickLinks: []
-  },
-  viewer: {
-    title: 'Dashboard',
-    subtitle: 'Tampilan read-only.',
     sections: [],
     featuredKpis: [],
     secondaryKpis: [],
@@ -165,12 +103,12 @@ const DASHBOARD_VIEW_BY_ROLE = {
 };
 
 function getDashboardViewConfig(role, user = {}) {
-  const r = normalizeRole(role || 'viewer');
-  const preset = DASHBOARD_VIEW_BY_ROLE[r] || DASHBOARD_VIEW_BY_ROLE.viewer;
+  const r = 'admin';
+  const preset = DASHBOARD_VIEW_BY_ROLE[r];
   const branch = user.kode_cabang ? String(user.kode_cabang).trim() : '';
   const scopeLabel = branch ? `Cabang ${branch}` : 'Semua cabang';
   let subtitle = preset.subtitle || '';
-  if (branch && r !== 'super_admin') {
+  if (branch) {
     subtitle = subtitle ? `${subtitle} (${scopeLabel})` : scopeLabel;
   }
   return {

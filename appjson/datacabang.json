@@ -129,9 +129,7 @@
   },
   "options": {
     "permissions": [
-      "admin",
-      "bagian_bio",
-      "data_master"
+      "admin"
     ]
   }
 }

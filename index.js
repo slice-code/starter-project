@@ -27,86 +27,28 @@ async function loadAppBranding() {
 }
 
 function normalizeMenuRole(role) {
-  const r = String(role || '').trim().toLowerCase();
-  return r === 'owner' ? 'super_admin' : r;
+  return 'admin';
 }
-
-const OWNER_ONLY_PATHS = new Set(['/users', '/datacabang', '/profil-perusahaan', '/menu-role-manager']);
 
 const FEATURE_SCRIPTS = {
   settingsOwner: [
     './core/menu-role-manager.js?v=20260520a',
     './core/company-profile-settings.js?v=202605201600'
-  ],
-  studio: [
-    './core/studio-crud-config.js?v=20260608a',
-    './core/studio-preview.js?v=20260608a',
-    './core/studio-crud-manager.js?v=20260608a',
-    './core/studio-form-builder.js?v=20260608a',
-    './core/studio-database-manager.js?v=20260608b',
-    './core/studio-schema-designer.js?v=20260608b',
-    './core/studio-field-presets.js?v=20260608a'
   ]
 };
 
-const STUDIO_SIDEBAR_CHILDREN = [
-  { name: 'CRUD Manager', icon: 'fas fa-table', page: '/studio/crud-manager' },
-  { name: 'Database Manager', icon: 'fas fa-database', page: '/studio/database-manager' },
-  { name: 'Deploy History', icon: 'fas fa-history', page: '/studio/deploy-history' }
-];
-
-function menuHasPath(items, predicate) {
-  for (const item of items || []) {
-    if (item.page && predicate(item.page)) return true;
-    if (item.children?.length && menuHasPath(item.children, predicate)) return true;
-  }
-  return false;
-}
-
 async function loadFeatureScripts(core, role) {
   if (typeof CoreScriptLoader === 'undefined') return;
-  const menu = core.layoutConfig.sideMenu || [];
   const scripts = [];
   const push = (list) => scripts.push(...(list || []));
-  const starts = (prefix) => menuHasPath(menu, (p) => String(p).startsWith(prefix));
   const r = normalizeMenuRole(role);
 
-  if (r === 'super_admin' || r === 'studio_admin') push(FEATURE_SCRIPTS.settingsOwner);
-  if (r === 'studio_admin' || r === 'super_admin' || starts('/studio/')) push(FEATURE_SCRIPTS.studio);
+  if (r === 'admin') push(FEATURE_SCRIPTS.settingsOwner);
 
   await CoreScriptLoader.loadMany([...new Set(scripts)]);
 }
 
-function ensureStudioMenuSidebar(sideMenu, role) {
-  const menuRole = normalizeMenuRole(role);
-  if (!['super_admin', 'studio_admin'].includes(menuRole)) return sideMenu || [];
-  const menu = [...(sideMenu || [])];
-  const idx = menu.findIndex((it) => it.name === 'Studio');
-  if (idx >= 0) {
-    menu[idx] = { ...menu[idx], children: STUDIO_SIDEBAR_CHILDREN.map((c) => ({ ...c })) };
-    return menu;
-  }
-  menu.push({ name: 'Studio', icon: 'fas fa-hammer', children: STUDIO_SIDEBAR_CHILDREN.map((c) => ({ ...c })) });
-  return menu;
-}
-
 function ensureOwnerMenuSidebar(sideMenu, role) {
-  const menuRole = normalizeMenuRole(role);
-  if (menuRole === 'admin') {
-    const out = [];
-    for (const item of sideMenu || []) {
-      const copy = { ...item };
-      if (copy.page && OWNER_ONLY_PATHS.has(copy.page)) continue;
-      if (copy.children?.length) {
-        copy.children = copy.children.filter((c) => c.page && !OWNER_ONLY_PATHS.has(c.page));
-        if (!copy.children.length && !copy.page) continue;
-      } else if (!copy.page) continue;
-      out.push(copy);
-    }
-    return out;
-  }
-  if (menuRole !== 'super_admin') return sideMenu || [];
-
   const menu = [...(sideMenu || [])];
   let group = menu.find(
     (it) => it.name === 'Pengaturan' || (it.children && it.children.some((c) => c.page === '/users'))
@@ -117,16 +59,16 @@ function ensureOwnerMenuSidebar(sideMenu, role) {
   }
   if (!group.children) group.children = [];
   if (!group.children.some((c) => c.page === '/profil-perusahaan')) {
-    group.children.push({ name: 'Profil Perusahaan', icon: 'fas fa-building', page: '/profil-perusahaan', roles: ['super_admin'] });
+    group.children.push({ name: 'Profil Perusahaan', icon: 'fas fa-building', page: '/profil-perusahaan', roles: ['admin'] });
   }
   if (!group.children.some((c) => c.page === '/menu-role-manager')) {
-    group.children.push({ name: 'Menu & Role', icon: 'fas fa-sitemap', page: '/menu-role-manager', roles: ['super_admin'] });
+    group.children.push({ name: 'Menu & Role', icon: 'fas fa-sitemap', page: '/menu-role-manager', roles: ['admin'] });
   }
   group.children.sort((a, b) => {
     const order = { '/users': 1, '/datacabang': 2, '/profil-perusahaan': 3, '/menu-role-manager': 4 };
     return (order[a.page] || 99) - (order[b.page] || 99);
   });
-  return ensureStudioMenuSidebar(menu, menuRole);
+  return menu;
 }
 
 async function loadMenuConfig(core, roleHint) {
@@ -286,10 +228,10 @@ function loadHardcodedPages(core, sessionUser) {
 
 function registerMenuRoleManagerPage(core, sessionUser) {
   const role = typeof CrmRbac !== 'undefined' && CrmRbac.getRole ? CrmRbac.getRole() : sessionUser?.role;
-  if (!['super_admin', 'studio_admin'].includes(normalizeMenuRole(role)) || typeof initMenuRoleManager !== 'function') return;
+  if (normalizeMenuRole(role) !== 'admin' || typeof initMenuRoleManager !== 'function') return;
   layout.addPage({
     path: '/menu-role-manager',
-    roles: ['super_admin', 'studio_admin'],
+    roles: ['admin'],
     pageContentPadding: '1.5rem',
     component: () => {
       const wrap = el('div').css({ maxWidth: '960px', margin: '0 auto' }).get();
@@ -301,10 +243,10 @@ function registerMenuRoleManagerPage(core, sessionUser) {
 
 function registerCompanyProfilePage(core, sessionUser) {
   const role = typeof CrmRbac !== 'undefined' && CrmRbac.getRole ? CrmRbac.getRole() : sessionUser?.role;
-  if (role !== 'super_admin' || typeof initCompanyProfileSettings !== 'function') return;
+  if (normalizeMenuRole(role) !== 'admin' || typeof initCompanyProfileSettings !== 'function') return;
   layout.addPage({
     path: '/profil-perusahaan',
-    roles: ['super_admin'],
+    roles: ['admin'],
     pageContentPadding: '1.5rem',
     component: () => {
       const wrap = el('div').css({ maxWidth: '960px', margin: '0 auto' }).get();
@@ -327,7 +269,7 @@ function registerProfilePage(core) {
         return el('div').css({ padding: '2rem', color: '#64748b' }).text('Sesi tidak valid.').get();
       }
 
-      const roleLabels = { super_admin: 'Owner', admin: 'Administrator Cabang', studio_admin: 'Developer', viewer: 'Viewer' };
+      const roleLabels = { admin: 'Administrator' };
       const row = (label, value) => el('div').css({ display: 'flex', justifyContent: 'space-between', padding: '0.65rem 0', borderBottom: '1px solid #f1f5f9' }).child([
         el('span').text(label).css({ color: '#64748b', fontSize: '0.875rem' }),
         el('span').text(String(value || '-')).css({ fontWeight: '600', fontSize: '0.875rem' })
@@ -370,8 +312,8 @@ function registerLoginPage(core) {
       const inputStyle = { width: '100%', padding: '0.72rem 0.95rem 0.72rem 2.55rem', borderRadius: '0.65rem', border: '1px solid #e2e8f0', boxSizing: 'border-box', fontSize: '0.9375rem' };
 
       const errEl = el('div').css({ display: 'none', padding: '0.65rem', borderRadius: '0.55rem', background: '#fef2f2', color: '#b91c1c', fontSize: '0.8125rem' }).link(refs, 'error');
-      const emailInput = el('input').attr('type', 'email').attr('required', 'required').attr('placeholder', appBranding.adminEmail || 'admin@localhost').css(inputStyle);
-      const passInput = el('input').attr('type', 'password').attr('required', 'required').attr('placeholder', 'Password').css(inputStyle);
+      const emailInput = el('input').name('email').attr('type', 'email').attr('required', 'required').attr('placeholder', appBranding.adminEmail || 'admin@localhost').css(inputStyle);
+      const passInput = el('input').name('password').attr('type', 'password').attr('required', 'required').attr('placeholder', 'Password').css(inputStyle);
       const submitBtn = el('button').attr('type', 'submit').text('Masuk').link(refs, 'submitBtn').css({ width: '100%', padding: '0.78rem', borderRadius: '0.65rem', border: 'none', background: teal.primary, color: '#fff', fontWeight: '700', cursor: 'pointer' });
 
       const form = el('form').css({ display: 'grid', gap: '1rem' }).submit(async (data) => {
@@ -409,8 +351,7 @@ function registerLoginPage(core) {
         el('p').text(appBranding.loginSubtitle).css({ margin: '0 0 1.5rem', opacity: '0.9', lineHeight: '1.6' }),
         el('ul').css({ margin: 0, paddingLeft: '1.1rem', lineHeight: '1.8', fontSize: '0.875rem' }).child([
           el('li').text('CRUD dari JSON — tanpa coding halaman'),
-          el('li').text('Role-based menu & permission'),
-          el('li').text('Studio untuk generate resource baru')
+          el('li').text('Role-based menu & permissions')
         ])
       ]);
 

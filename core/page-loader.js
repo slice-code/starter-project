@@ -6,43 +6,11 @@
   // Halaman inti — dimuat segera setelah login (1 request bulk)
   /** Halaman custom JS — jangan timpa dengan lazy loader appjson */
   const HARDCODED_PAGE_PATHS = new Set([
-    '/menu-role-manager',
-    '/studio/crud-manager',
-    '/studio/database-manager',
-    '/studio/form-builder',
-    '/studio/schema-designer',
-    '/studio/field-presets',
-    '/studio/deploy-history',
-    '/jurnal-umum',
-    '/kas-masuk',
-    '/kas-keluar',
-    '/pembayaran',
-    '/pembayaran-tki',
-    '/potongan-bulanan',
-    '/gaji-tki',
-    '/piutang',
-    '/laporan/buku-besar',
-    '/laporan/neraca',
-    '/laporan/laba-rugi',
-    '/laporan/arus-kas'
+    '/menu-role-manager'
   ]);
 
   const EAGER_PATHS = [
     '/',
-    '/personal',
-    '/tambahbio',
-    '/family',
-    '/working',
-    '/skillcondition',
-    '/pengalaman',
-    '/dokumen',
-    '/disnaker',
-    '/medical',
-    '/paspor',
-    '/majikan',
-    '/visa',
-    '/skck',
-    '/printsurat',
     '/about',
     '/users'
   ];
@@ -88,7 +56,7 @@
         typeof CrmRbac !== 'undefined' && CrmRbac.getRole
           ? CrmRbac.getRole()
           : core._sessionRole || null;
-      if (role === 'super_admin' || role === 'admin') {
+      if (role === 'admin') {
         return opts.permissions && typeof opts.permissions === 'object' && !Array.isArray(opts.permissions)
           ? opts.permissions
           : {
@@ -121,7 +89,7 @@
       const pathAllowedByMenu =
         pageConfig.path && menuPerms[pageConfig.path] != null;
       const routeRoles =
-        sessionRole === 'super_admin' || sessionRole === 'admin'
+        sessionRole === 'admin'
           ? null
           : pathAllowedByMenu
             ? null

@@ -35,15 +35,15 @@ async function main() {
 
   if (tables.includes('users')) {
     const cfg = appConfig.getAppConfig();
-    const email = cfg.adminEmail || 'admin@localhost';
-    const password = cfg.adminPassword || 'admin123';
+    const email = cfg.adminEmail || 'demo@mail.com';
+    const password = cfg.adminPassword || 'demo123';
     let user = await database.getByField('users', 'email', email);
     if (!user) {
       const hash = bcrypt.hashSync(password, 10);
       await database.create('users', {
         name: cfg.adminName || 'Administrator',
         email,
-        role: 'super_admin',
+        role: 'admin',
         kode_cabang: null,
         phone: '',
         password: hash,
@@ -52,7 +52,8 @@ async function main() {
       console.log(`[seed:bootstrap] Owner dibuat: ${email}`);
       console.log('[seed:bootstrap] Password dari ADMIN_PASSWORD env atau default admin123');
     } else {
-      console.log(`[seed:bootstrap] Owner sudah ada: ${email}`);
+      await database.update('users', user.id, { role: 'admin' });
+      console.log(`[seed:bootstrap] Owner updated to admin: ${email}`);
     }
   }
 

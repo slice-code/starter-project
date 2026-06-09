@@ -74,7 +74,7 @@ const printSuratService = {
   buildRecordContext: async () => ({}),
   buildRekomIjinBatchContextAsync: async () => ({})
 };
-const StudioService = require("./services/studio-service");
+
 
 const PORT = parseInt(process.env.PORT || "3004", 10);
 
@@ -404,7 +404,7 @@ async function handleAuthRoutes(req, res) {
       const url = new URL(req.url, `http://${req.headers.host}`);
       if (url.searchParams.get("master") === "1") {
         const menuRole = rolePermissions.normalizeRole(user.role);
-        if (menuRole !== "super_admin" && menuRole !== "studio_admin") {
+        if (menuRole !== "admin") {
           json(403, {
             success: false,
             error: "Hanya Owner atau Developer yang boleh melihat menu master",
@@ -680,25 +680,11 @@ function requireApiAuth(req, res) {
 
   req.authUser = user;
 
-  // Studio API — akses via canAccessStudio, bukan resource CRUD biasa
-  if (pathname.startsWith("/api/studio/")) {
-    if (!canAccessStudio(user)) {
-      res.writeHead(403, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ success: false, error: "Access denied." }));
-      return false;
-    }
-    return true;
-  }
-
-  // Schema metadata API — studio roles + super_admin
-  if (pathname === "/api/schema" || pathname.startsWith("/api/schema/")) {
-    const role = rolePermissions.normalizeRole(user.role);
-    if (role !== "super_admin" && role !== "studio_admin") {
-      res.writeHead(403, { "Content-Type": "application/json" });
-      res.end(JSON.stringify({ success: false, error: "Access denied." }));
-      return false;
-    }
-    return true;
+  // Disable Studio and Schema APIs completely
+  if (pathname.startsWith("/api/studio/") || pathname === "/api/schema" || pathname.startsWith("/api/schema/")) {
+    res.writeHead(404, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ success: false, error: "Feature disabled." }));
+    return false;
   }
 
   // Check RBAC permissions for CRUD operations
@@ -784,7 +770,7 @@ const schemaDir = path.join(__dirname, "schema");
 
 function canAccessStudio(user) {
   const role = rolePermissions.normalizeRole(user?.role);
-  return role === "super_admin" || role === "studio_admin";
+  return role === "admin";
 }
 
 async function handleApiRoutes(req, res) {
@@ -1189,7 +1175,7 @@ async function handleApiRoutes(req, res) {
   if (req.url === "/api/studio/import" && req.method === "POST") {
     try {
       const authUser = auth.getUserFromRequest(req);
-      if (!authUser || authUser.role !== 'super_admin') {
+      if (!authUser || authUser.role !== 'admin') {
         res.writeHead(403, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ success: false, error: "Access denied. Super admin role required." }));
         return true;
@@ -1297,7 +1283,7 @@ async function handleApiRoutes(req, res) {
     if (resourceName && req.method === "POST" && parts.length === 1) {
       try {
         const authUser = auth.getUserFromRequest(req);
-        if (!authUser || authUser.role !== 'super_admin') {
+        if (!authUser || authUser.role !== 'admin') {
           res.writeHead(403, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ success: false, error: "Super admin required." }));
           return true;
@@ -1370,7 +1356,7 @@ async function handleApiRoutes(req, res) {
   if (req.url.match(/^\/api\/studio\/schema\/[^/]+\/sync-db/) && req.method === "POST") {
     try {
       const authUser = auth.getUserFromRequest(req);
-      if (!authUser || authUser.role !== 'super_admin') {
+      if (!authUser || authUser.role !== 'admin') {
         res.writeHead(403, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ success: false, error: "Super admin required." }));
         return true;
@@ -1532,7 +1518,7 @@ async function handleApiRoutes(req, res) {
         try {
           const authUser = req.authUser || {};
           const userRole = String(authUser.role || "").toLowerCase();
-          if (!["keuangan", "admin", "super_admin"].includes(userRole)) {
+          if (!["admin"].includes(userRole)) {
             res.writeHead(403, { "Content-Type": "application/json" });
             res.end(JSON.stringify({ success: false, error: "Akses ditolak" }));
             return;
@@ -1637,7 +1623,7 @@ async function handleApiRoutes(req, res) {
   if (apiPath === "/api/pembayaran-tki/bukti" && req.method === "POST") {
     try {
       const userRole = String(req.authUser?.role || "").toLowerCase();
-      if (!["super_admin", "admin", "keuangan"].includes(userRole)) {
+      if (!["admin"].includes(userRole)) {
         res.writeHead(403, { "Content-Type": "application/json" });
         res.end(JSON.stringify({ success: false, error: "Akses ditolak." }));
         return true;
@@ -1707,7 +1693,7 @@ async function handleApiRoutes(req, res) {
     try {
       const authUser = req.authUser || {};
       const userRole = String(authUser.role || '').toLowerCase();
-      if (!['keuangan', 'admin', 'super_admin'].includes(userRole)) {
+      if (!['admin'].includes(userRole)) {
         json(403, { success: false, error: 'Akses ditolak. Hanya keuangan.' }); return true;
       }
       const body = await readJsonBody(req);
@@ -1727,7 +1713,7 @@ async function handleApiRoutes(req, res) {
     try {
       const authUser = req.authUser || {};
       const userRole = String(authUser.role || '').toLowerCase();
-      if (!['keuangan', 'admin', 'super_admin'].includes(userRole)) {
+      if (!['admin'].includes(userRole)) {
         json(403, { success: false, error: 'Akses ditolak. Hanya keuangan.' }); return true;
       }
       const body = await readJsonBody(req);
@@ -1748,7 +1734,7 @@ async function handleApiRoutes(req, res) {
     try {
       const authUser = req.authUser || {};
       const userRole = String(authUser.role || '').toLowerCase();
-      if (!['keuangan', 'admin', 'super_admin'].includes(userRole)) {
+      if (!['admin'].includes(userRole)) {
         json(403, { success: false, error: 'Akses ditolak.' }); return true;
       }
       const asetId = inventarisPenyusutanMatch[1];
@@ -1769,7 +1755,7 @@ async function handleApiRoutes(req, res) {
     try {
       const authUser = req.authUser || {};
       const userRole = String(authUser.role || '').toLowerCase();
-      if (!['keuangan', 'admin', 'super_admin'].includes(userRole)) {
+      if (!['admin'].includes(userRole)) {
         json(403, { success: false, error: 'Akses ditolak.' }); return true;
       }
       const asetId = inventarisJadwalMatch[1];
@@ -1788,7 +1774,7 @@ async function handleApiRoutes(req, res) {
     try {
       const authUser = req.authUser || {};
       const userRole = String(authUser.role || '').toLowerCase();
-      if (!['keuangan', 'admin', 'super_admin'].includes(userRole)) {
+      if (!['admin'].includes(userRole)) {
         json(403, { success: false, error: 'Akses ditolak.' }); return true;
       }
       const kodeCabang = rolePermissions.BRANCH_RESTRICTED_ROLES.includes(userRole) ? (authUser.kode_cabang || null) : null;
@@ -2259,7 +2245,7 @@ async function handleApiRoutes(req, res) {
         return true;
       }
       const userRole = rolePermissions.normalizeRole(authUser.role);
-      const allowed = ["super_admin", "admin", "data_master", "bagian_bio"];
+      const allowed = ["admin"];
       if (!allowed.includes(userRole)) {
         res.writeHead(403, { "Content-Type": "application/json" });
         res.end(
@@ -2338,7 +2324,7 @@ async function handleApiRoutes(req, res) {
 
       const userRecord = await database.getById("users", authUser.sub);
 
-      if (userRole === "super_admin") {
+      if (userRole === "admin") {
         body.kode_cabang = String(
           body.kode_cabang || userRecord?.kode_cabang || "",
         ).trim();
@@ -4411,7 +4397,7 @@ async function handleApiRoutes(req, res) {
         return true;
       }
       const role = rolePermissions.normalizeRole(authUser.role);
-      const allowed = ["super_admin", "admin", "blk"].includes(role);
+      const allowed = ["admin"].includes(role);
       if (!allowed) {
         res.writeHead(403, { "Content-Type": "application/json" });
         res.end(
@@ -4468,7 +4454,7 @@ async function handleApiRoutes(req, res) {
         return true;
       }
       const role = rolePermissions.normalizeRole(authUser.role);
-      const allowed = ["super_admin", "admin", "blk"].includes(role);
+      const allowed = ["admin"].includes(role);
       if (!allowed) {
         res.writeHead(403, { "Content-Type": "application/json" });
         res.end(
@@ -4528,7 +4514,7 @@ async function handleApiRoutes(req, res) {
         return true;
       }
       const role = rolePermissions.normalizeRole(authUser.role);
-      const allowed = ["super_admin", "admin", "blk"].includes(role);
+      const allowed = ["admin"].includes(role);
       if (!allowed) {
         res.writeHead(403, { "Content-Type": "application/json" });
         res.end(
@@ -4651,7 +4637,7 @@ async function handleApiRoutes(req, res) {
       const roleParam = new URLSearchParams(qstr).get("role");
       const authRole = rolePermissions.normalizeRole(authUser.role);
       const userRole =
-        authRole === "super_admin" && roleParam
+        authRole === "admin" && roleParam
           ? rolePermissions.normalizeRole(roleParam)
           : authRole || "admin";
 
@@ -4753,13 +4739,13 @@ async function handleApiRoutes(req, res) {
       const authUser = auth.getUserFromRequest(req);
       if (
         !authUser ||
-        rolePermissions.normalizeRole(authUser.role) !== "super_admin"
+        rolePermissions.normalizeRole(authUser.role) !== "admin"
       ) {
         res.writeHead(403, { "Content-Type": "application/json" });
         res.end(
           JSON.stringify({
             success: false,
-            error: "Only super_admin can manage menu mappings",
+            error: "Only admin can manage menu mappings",
           }),
         );
         return true;
@@ -6186,7 +6172,7 @@ async function handleCrudRoutes(req, res) {
 
       if (resource === "personal") {
         const role = String(req.authUser?.role || "").toLowerCase();
-        const isAdmin = role === "super_admin" || role === "admin";
+        const isAdmin = role === "admin";
         const idBiodata = existing.id_biodata;
         const auditOpts = dbAuditOptsFromReq(req);
 

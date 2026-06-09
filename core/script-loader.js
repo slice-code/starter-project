@@ -28,6 +28,13 @@
   function isLoaded(src) {
     const clean = normalizeSrc(src);
     if (!clean) return false;
+    if (clean.includes('.css') || clean.includes('stylesheet')) {
+      const links = [...document.querySelectorAll('link[rel="stylesheet"]')];
+      return links.some((node) => {
+        const attr = node.getAttribute('href') || '';
+        return attr === clean || node.href.endsWith(clean);
+      });
+    }
     const scripts = [...document.querySelectorAll('script[src]')];
     return scripts.some((node) => {
       const attr = node.getAttribute('src') || '';
@@ -41,8 +48,24 @@
     if (loaded.has(clean)) return loaded.get(clean);
 
     const base = scriptBase(clean);
+    const hasCss = clean.includes('.css') || clean.includes('stylesheet');
+
     if (!isLoaded(clean)) {
+      if (hasCss) {
+        const promise = new Promise((resolve, reject) => {
+          const l = document.createElement('link');
+          l.rel = 'stylesheet';
+          l.href = clean;
+          l.onload = () => resolve(clean);
+          l.onerror = () => reject(new Error(`Gagal memuat stylesheet: ${clean}`));
+          document.head.appendChild(l);
+        });
+        loaded.set(clean, promise);
+        return promise;
+      }
       removeScriptByBase(base);
+    } else if (hasCss) {
+      return Promise.resolve(clean);
     }
 
     const promise = new Promise((resolve, reject) => {

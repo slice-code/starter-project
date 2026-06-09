@@ -10,6 +10,6 @@
   },
   "options": {
     "pageContentPadding": "1.25rem",
-    "roles": ["super_admin", "admin", "studio_admin", "viewer"]
+    "roles": ["admin"]
   }
 }

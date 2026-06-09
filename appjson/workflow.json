@@ -1,0 +1,13 @@
+{
+  "path": "/workflow",
+  "type": "custom",
+  "module": "./core/workflow-page.js",
+  "factory": "WorkflowPage.init",
+  "libraries": [
+    "https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.css",
+    "https://cdn.jsdelivr.net/gh/jerosoler/Drawflow/dist/drawflow.min.js"
+  ],
+  "options": {
+    "roles": ["admin"]
+  }
+}

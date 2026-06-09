@@ -3285,7 +3285,7 @@
     checkPermission(action, schemaPerms, pagePermsOrRoles) {
       if (typeof CrmRbac !== 'undefined' && CrmRbac.getRole) {
         const r = CrmRbac.getRole();
-        if (r === 'super_admin' || r === 'admin') return true;
+        if (r === 'admin') return true;
       }
       if (pagePermsOrRoles && typeof pagePermsOrRoles === 'object' && pagePermsOrRoles._explicit) {
         const allowed = pagePermsOrRoles[action];

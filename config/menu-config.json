@@ -4,7 +4,7 @@
   "metadata": {
     "appName": "Admin Starter",
     "sidebarTheme": "teal",
-    "ownerRoles": ["super_admin"],
+    "ownerRoles": ["admin"],
     "defaultRolePermissions": {
       "can_create": 0,
       "can_update": 0,
@@ -31,6 +31,12 @@
           "icon": "fas fa-tags",
           "path": "/categories",
           "sortOrder": 1
+        },
+        {
+          "name": "Workflow",
+          "icon": "fas fa-sitemap",
+          "path": "/workflow",
+          "sortOrder": 2
         }
       ]
     },
@@ -71,68 +77,14 @@
           "ownerOnly": true
         }
       ]
-    },
-    {
-      "name": "Studio",
-      "icon": "fas fa-hammer",
-      "path": "/studio",
-      "type": "group",
-      "sortOrder": 95,
-      "roles": ["super_admin", "studio_admin"],
-      "children": [
-        {
-          "name": "CRUD Manager",
-          "icon": "fas fa-table",
-          "path": "/studio/crud-manager",
-          "sortOrder": 1
-        },
-        {
-          "name": "Database Manager",
-          "icon": "fas fa-database",
-          "path": "/studio/database-manager",
-          "sortOrder": 2
-        },
-        {
-          "name": "Deploy History",
-          "icon": "fas fa-history",
-          "path": "/studio/deploy-history",
-          "sortOrder": 3
-        }
-      ]
     }
   ],
   "roles": {
-    "super_admin": {
-      "label": "Owner",
+    "admin": {
+      "label": "Administrator",
       "menuPaths": ["*"],
       "permissions": {
         "default": { "can_create": 1, "can_update": 1, "can_delete": 1 },
-        "exceptions": {}
-      }
-    },
-    "admin": {
-      "label": "Administrator Cabang",
-      "menuPaths": ["/", "/categories", "/about"],
-      "permissions": {
-        "default": { "can_create": 1, "can_update": 1, "can_delete": 0 },
-        "exceptions": {
-          "/categories": { "can_create": 1, "can_update": 1, "can_delete": 1 }
-        }
-      }
-    },
-    "studio_admin": {
-      "label": "Developer",
-      "menuPaths": ["*", "/studio/crud-manager", "/studio/database-manager", "/studio/deploy-history", "/menu-role-manager"],
-      "permissions": {
-        "default": { "can_create": 1, "can_update": 1, "can_delete": 1 },
-        "exceptions": {}
-      }
-    },
-    "viewer": {
-      "label": "Viewer",
-      "menuPaths": ["/", "/categories", "/about"],
-      "permissions": {
-        "default": { "can_create": 0, "can_update": 0, "can_delete": 0 },
         "exceptions": {}
       }
     }

@@ -80,12 +80,17 @@ async function syncMenuStructure(config) {
 
   // Clear existing menu_mapping
   console.log('\n🗑️  Clearing menu_mapping table...');
-  const existingMenus = await database.list('menu_mapping');
-  if (existingMenus.data.length > 0) {
-    for (const menu of existingMenus.data) {
-      await database.remove('menu_mapping', menu.id);
+  try {
+    const existingMenus = await database.list('menu_mapping');
+    if (existingMenus.data.length > 0) {
+      for (const menu of existingMenus.data) {
+        await database.remove('menu_mapping', menu.id);
+      }
+      console.log(`   Removed ${existingMenus.data.length} existing menus`);
     }
-    console.log(`   Removed ${existingMenus.data.length} existing menus`);
+  } catch (err) {
+    console.warn(`   ⚠️  Skipping menu_mapping structure sync: table 'menu_mapping' does not exist in the database (this table is legacy; frontend reads local config JSON directly).`);
+    return;
   }
 
   // Insert new menus
@@ -121,6 +126,15 @@ async function syncRolePermissions(config) {
   const rolesToSync = SPECIFIC_ROLE ? [SPECIFIC_ROLE] : Object.keys(config.roles);
   console.log(`👥 Roles to sync: ${rolesToSync.join(', ')}`);
 
+  if (!DRY_RUN && !SPECIFIC_ROLE) {
+    console.log('   🗑️  Clearing all existing menu mappings from database...');
+    const existingMappings = await database.list('menu_role_mapping', { perPage: 1000 });
+    for (const mapping of existingMappings.data) {
+      await database.remove('menu_role_mapping', mapping.id);
+    }
+    console.log(`      Wiped ${existingMappings.data.length} legacy mapping entries.`);
+  }
+
   let totalEntries = 0;
 
   for (const role of rolesToSync) {
@@ -151,7 +165,7 @@ async function syncRolePermissions(config) {
 
     // Clear existing mappings for this role
     console.log(`   🗑️  Clearing existing mappings for ${role}...`);
-    const existingMappings = await database.list('menu_role_mapping');
+    const existingMappings = await database.list('menu_role_mapping', { perPage: 1000 });
     const roleMappings = existingMappings.data.filter(m => m.role === role);
     for (const mapping of roleMappings) {
       await database.remove('menu_role_mapping', mapping.id);

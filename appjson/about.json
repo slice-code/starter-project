@@ -14,7 +14,6 @@
             "Auth JWT + role-based menu",
             "CRUD engine (table + form builder)",
             "Multi-cabang (users + datacabang)",
-            "Studio: CRUD & database manager",
             "Contoh resource: categories"
           ]},
           { "type": "heading", "level": 3, "text": "Menambah CRUD baru" },
@@ -29,6 +28,6 @@
     ]
   },
   "options": {
-    "roles": ["super_admin", "admin", "studio_admin", "viewer"]
+    "roles": ["admin"]
   }
 }

@@ -6,20 +6,11 @@ function initMenuRoleManager(container) {
   if (!container) return;
 
   const allRoles = [
-    { value: 'super_admin', label: 'Owner' },
-    { value: 'admin', label: 'Administrator Cabang' },
-    { value: 'bagian_bio', label: 'Bagian Biodata' },
-    { value: 'bagian_foto', label: 'Bagian Foto' },
-    { value: 'marketing', label: 'Marketing' },
-    { value: 'keuangan', label: 'Keuangan' },
-    { value: 'staff', label: 'Staff' },
-    { value: 'agen', label: 'Agen' },
-    { value: 'blk', label: 'Bagian BLK' },
-    { value: 'studio_admin', label: 'Developer/Programmer' }
+    { value: 'admin', label: 'Administrator' }
   ];
 
   let menuConfig = { sideMenu: [] };
-  let currentRole = 'bagian_bio';
+  let currentRole = 'admin';
   /** @type {Map<string, { enabled: boolean, can_create: boolean, can_update: boolean, can_delete: boolean, name: string, parent_path: string|null }>} */
   let menuStates = new Map();
   let viewMeta = {
