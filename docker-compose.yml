@@ -1,0 +1,93 @@
+# Jalankan: docker compose up -d  →  http://localhost:8005
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: pjtki-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-pjtki}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pjtki}
+      POSTGRES_DB: ${POSTGRES_DB:-pjtki}
+    volumes:
+      - pjtki_pgdata:/var/lib/postgresql/data
+      - ./postgresql-prod.conf:/etc/postgresql/postgresql.conf
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    shm_size: 2gb
+    networks:
+      - pjtki
+    # Postgres hanya di jaringan internal `pjtki` (hostname: db). Tidak di-expose ke host.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pjtki} -d ${POSTGRES_DB:-pjtki}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    # Resource limits for database
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+          cpus: '4.0'
+        reservations:
+          memory: 2G
+          cpus: '2.0'
+    # Logging configuration
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  app:
+    build: .
+    container_name: pjtki-app
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8005}:3004"
+    environment:
+      NODE_ENV: production
+      PORT: 3004
+      HOME: /tmp
+      DATABASE_URL: postgres://${POSTGRES_USER:-pjtki}:${POSTGRES_PASSWORD:-pjtki}@db:5432/${POSTGRES_DB:-pjtki}
+      # SECURITY: JWT_SECRET is required in production (no weak default)
+      JWT_SECRET: "${JWT_SECRET:?JWT_SECRET is required. Generate with: openssl rand -base64 64}"
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY:-}
+      GEMINI_OCR_MODEL: ${GEMINI_OCR_MODEL:-gemini-2.5-flash}
+    env_file:
+      - path: .env
+        required: false
+    volumes:
+      - ./files:/app/files
+      - ./data:/app/data
+      - ./backups:/app/backups  # Backup storage
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - pjtki
+    # Resource limits — LibreOffice konversi PDF butuh memori lebih besar
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '2.0'
+        reservations:
+          memory: 512M
+          cpus: '0.5'
+    # Security: Read-only root filesystem (except volumes)
+    read_only: true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=512M
+    # Logging configuration
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  pjtki_pgdata:
+
+networks:
+  pjtki:
+    name: pjtki

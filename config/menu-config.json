@@ -1,0 +1,140 @@
+{
+  "_description": "Menu & role permissions — starter admin template",
+  "_version": "1.0.0",
+  "metadata": {
+    "appName": "Admin Starter",
+    "sidebarTheme": "teal",
+    "ownerRoles": ["super_admin"],
+    "defaultRolePermissions": {
+      "can_create": 0,
+      "can_update": 0,
+      "can_delete": 0
+    }
+  },
+  "menuStructure": [
+    {
+      "name": "Dashboard",
+      "icon": "fas fa-home",
+      "path": "/",
+      "type": "single",
+      "sortOrder": 1
+    },
+    {
+      "name": "Data",
+      "icon": "fas fa-database",
+      "path": "/data",
+      "type": "group",
+      "sortOrder": 2,
+      "children": [
+        {
+          "name": "Kategori",
+          "icon": "fas fa-tags",
+          "path": "/categories",
+          "sortOrder": 1
+        }
+      ]
+    },
+    {
+      "name": "Pengaturan",
+      "icon": "fas fa-gear",
+      "path": "/settings",
+      "type": "group",
+      "sortOrder": 90,
+      "ownerOnly": true,
+      "children": [
+        {
+          "name": "Pengguna",
+          "icon": "fas fa-user-shield",
+          "path": "/users",
+          "sortOrder": 1,
+          "ownerOnly": true
+        },
+        {
+          "name": "Cabang",
+          "icon": "fas fa-code-branch",
+          "path": "/datacabang",
+          "sortOrder": 2,
+          "ownerOnly": true
+        },
+        {
+          "name": "Profil Perusahaan",
+          "icon": "fas fa-building",
+          "path": "/profil-perusahaan",
+          "sortOrder": 3,
+          "ownerOnly": true
+        },
+        {
+          "name": "Menu & Role",
+          "icon": "fas fa-sitemap",
+          "path": "/menu-role-manager",
+          "sortOrder": 4,
+          "ownerOnly": true
+        }
+      ]
+    },
+    {
+      "name": "Studio",
+      "icon": "fas fa-hammer",
+      "path": "/studio",
+      "type": "group",
+      "sortOrder": 95,
+      "roles": ["super_admin", "studio_admin"],
+      "children": [
+        {
+          "name": "CRUD Manager",
+          "icon": "fas fa-table",
+          "path": "/studio/crud-manager",
+          "sortOrder": 1
+        },
+        {
+          "name": "Database Manager",
+          "icon": "fas fa-database",
+          "path": "/studio/database-manager",
+          "sortOrder": 2
+        },
+        {
+          "name": "Deploy History",
+          "icon": "fas fa-history",
+          "path": "/studio/deploy-history",
+          "sortOrder": 3
+        }
+      ]
+    }
+  ],
+  "roles": {
+    "super_admin": {
+      "label": "Owner",
+      "menuPaths": ["*"],
+      "permissions": {
+        "default": { "can_create": 1, "can_update": 1, "can_delete": 1 },
+        "exceptions": {}
+      }
+    },
+    "admin": {
+      "label": "Administrator Cabang",
+      "menuPaths": ["/", "/categories", "/about"],
+      "permissions": {
+        "default": { "can_create": 1, "can_update": 1, "can_delete": 0 },
+        "exceptions": {
+          "/categories": { "can_create": 1, "can_update": 1, "can_delete": 1 }
+        }
+      }
+    },
+    "studio_admin": {
+      "label": "Developer",
+      "menuPaths": ["*", "/studio/crud-manager", "/studio/database-manager", "/studio/deploy-history", "/menu-role-manager"],
+      "permissions": {
+        "default": { "can_create": 1, "can_update": 1, "can_delete": 1 },
+        "exceptions": {}
+      }
+    },
+    "viewer": {
+      "label": "Viewer",
+      "menuPaths": ["/", "/categories", "/about"],
+      "permissions": {
+        "default": { "can_create": 0, "can_update": 0, "can_delete": 0 },
+        "exceptions": {}
+      }
+    }
+  }
+}

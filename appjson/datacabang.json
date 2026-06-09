@@ -1,0 +1,137 @@
+{
+  "path": "/datacabang",
+  "type": "crud",
+  "config": {
+    "resource": "datacabang",
+    "title": "Cabang",
+    "icon": "fas fa-code-branch",
+    "formDisplay": "modal",
+    "table": {
+      "columns": [
+        {
+          "key": "kode_cabang",
+          "label": "Kode",
+          "sortable": true,
+          "searchable": true
+        },
+        {
+          "key": "nama_cabang",
+          "label": "Nama Cabang",
+          "sortable": true,
+          "searchable": true
+        },
+        {
+          "key": "kota",
+          "label": "Kota",
+          "sortable": true,
+          "searchable": true
+        },
+        {
+          "key": "provinsi",
+          "label": "Provinsi",
+          "sortable": true,
+          "searchable": true
+        },
+        {
+          "key": "urutan",
+          "label": "Urutan",
+          "sortable": true
+        },
+        {
+          "key": "status",
+          "label": "Status"
+        },
+        {
+          "key": "actions",
+          "type": "actions",
+          "actions": [
+            "edit",
+            "delete"
+          ]
+        }
+      ],
+      "features": {
+        "search": true,
+        "pagination": true,
+        "perPage": 25
+      }
+    },
+    "form": {
+      "columns": 2,
+      "fields": [
+        {
+          "name": "kode_cabang",
+          "label": "Kode Cabang",
+          "type": "text",
+          "required": true,
+          "placeholder": "Contoh: BREBES"
+        },
+        {
+          "name": "nama_cabang",
+          "label": "Nama Cabang",
+          "type": "text",
+          "required": true,
+          "placeholder": "Contoh: Brebes"
+        },
+        {
+          "name": "kota",
+          "label": "Kota",
+          "type": "text",
+          "placeholder": "Contoh: Brebes"
+        },
+        {
+          "name": "provinsi",
+          "label": "Provinsi",
+          "type": "text",
+          "placeholder": "Contoh: Jawa Tengah"
+        },
+        {
+          "name": "telepon",
+          "label": "Telepon",
+          "type": "text"
+        },
+        {
+          "name": "email",
+          "label": "Email",
+          "type": "email"
+        },
+        {
+          "name": "urutan",
+          "label": "Urutan",
+          "type": "number",
+          "default": 0
+        },
+        {
+          "name": "status",
+          "label": "Status",
+          "type": "select",
+          "options": [
+            {
+              "value": "aktif",
+              "label": "Aktif"
+            },
+            {
+              "value": "nonaktif",
+              "label": "Nonaktif"
+            }
+          ],
+          "default": "aktif"
+        },
+        {
+          "name": "alamat",
+          "label": "Alamat",
+          "type": "textarea",
+          "colspan": 2,
+          "rows": 2
+        }
+      ]
+    }
+  },
+  "options": {
+    "permissions": [
+      "admin",
+      "bagian_bio",
+      "data_master"
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "path": "/categories",
+  "type": "crud",
+  "config": {
+    "resource": "categories",
+    "title": "Kategori",
+    "icon": "fas fa-tags",
+    "formDisplay": "modal",
+    "modalSize": "medium",
+    "table": {
+      "columns": [
+        { "key": "kode", "label": "Kode", "sortable": true, "searchable": true },
+        { "key": "nama", "label": "Nama", "sortable": true, "searchable": true },
+        { "key": "aktif", "label": "Status", "sortable": true },
+        { "key": "keterangan", "label": "Keterangan", "searchable": true },
+        { "key": "actions", "type": "actions", "actions": ["edit", "delete"] }
+      ],
+      "features": { "search": true, "pagination": true, "perPage": 25 }
+    },
+    "form": {
+      "columns": 2,
+      "intro": "Contoh CRUD sederhana — duplikasi pola ini untuk resource baru.",
+      "fields": [
+        { "name": "kode", "label": "Kode", "type": "text", "placeholder": "CAT-001" },
+        { "name": "nama", "label": "Nama", "type": "text", "required": true },
+        {
+          "name": "aktif",
+          "label": "Status",
+          "type": "select",
+          "default": "1",
+          "options": [
+            { "value": "1", "label": "Aktif" },
+            { "value": "0", "label": "Nonaktif" }
+          ]
+        },
+        { "name": "keterangan", "label": "Keterangan", "type": "textarea", "rows": 3, "colspan": 2, "richText": false }
+      ]
+    }
+  },
+  "options": {
+    "permissions": {
+      "create": ["super_admin", "admin", "studio_admin"],
+      "read": ["super_admin", "admin", "studio_admin", "viewer"],
+      "update": ["super_admin", "admin", "studio_admin"],
+      "delete": ["super_admin", "studio_admin"]
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "name": "app_notifications",
+  "label": "Notifikasi Aplikasi",
+  "primaryKey": "id",
+  "timestamps": {
+    "createdAt": "created_at",
+    "updatedAt": "updated_at"
+  },
+  "fields": [
+    { "name": "id", "type": "number", "autoIncrement": true },
+    { "name": "kode_cabang", "type": "text", "label": "Kode Cabang" },
+    { "name": "type", "type": "text", "defaultValue": "info", "label": "Tipe" },
+    { "name": "title", "type": "text", "required": true, "label": "Judul" },
+    { "name": "message", "type": "textarea", "label": "Pesan" },
+    { "name": "link", "type": "text", "label": "Link" },
+    { "name": "ref_type", "type": "text", "label": "Referensi Tipe" },
+    { "name": "ref_id", "type": "text", "label": "Referensi ID" },
+    { "name": "created_by", "type": "text", "label": "Dibuat Oleh" }
+  ]
+}

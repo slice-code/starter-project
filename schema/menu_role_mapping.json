@@ -1,0 +1,32 @@
+{
+  "name": "menu_role_mapping",
+  "label": "Mapping Menu Role",
+  "primaryKey": "id",
+  "timestamps": { "createdAt": "created_at", "updatedAt": "updated_at" },
+  "fields": [
+    { "name": "id", "type": "number", "autoIncrement": true },
+    { "name": "role", "type": "enum", "required": true, "label": "Role", "options": [
+      { "value": "super_admin", "label": "Owner" },
+      { "value": "admin", "label": "Administrator Cabang" },
+      { "value": "bagian_bio", "label": "Bagian Biodata" },
+      { "value": "bagian_foto", "label": "Bagian Foto" },
+      { "value": "marketing", "label": "Marketing" },
+      { "value": "keuangan", "label": "Keuangan" },
+      { "value": "staff", "label": "Staff" },
+      { "value": "agen", "label": "Agen" }
+    ]},
+    { "name": "menu_path", "type": "text", "required": true, "label": "Menu Path", "description": "Path menu (contoh: /personal, /tambahbio, dll)" },
+    { "name": "menu_name", "type": "text", "required": true, "label": "Menu Name", "description": "Nama menu untuk display" },
+    { "name": "parent_path", "type": "text", "label": "Parent Path", "description": "Parent menu path (untuk dropdown/nested menu)" },
+    { "name": "is_active", "type": "boolean", "defaultValue": true, "label": "Active", "description": "Apakah menu aktif untuk role ini" },
+    { "name": "can_create", "type": "boolean", "defaultValue": false, "label": "Boleh Create", "description": "Izinkan tombol tambah / create di halaman ini" },
+    { "name": "can_update", "type": "boolean", "defaultValue": false, "label": "Boleh Edit", "description": "Izinkan edit / update data di halaman ini" },
+    { "name": "can_delete", "type": "boolean", "defaultValue": false, "label": "Boleh Hapus", "description": "Izinkan hapus data di halaman ini" },
+    { "name": "sort_order", "type": "number", "defaultValue": 0, "label": "Sort Order", "description": "Urutan menu (0 = default)" }
+  ],
+  "indexes": [
+    { "name": "idx_menu_role", "columns": ["role"] },
+    { "name": "idx_menu_path", "columns": ["menu_path"] },
+    { "name": "idx_menu_parent", "columns": ["parent_path"] }
+  ]
+}

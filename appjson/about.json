@@ -1,0 +1,34 @@
+{
+  "path": "/about",
+  "type": "page",
+  "config": {
+    "title": "Tentang",
+    "children": [
+      {
+        "type": "card",
+        "children": [
+          { "type": "heading", "level": 1, "text": "Admin Starter" },
+          { "type": "text", "text": "Template admin JSON-driven. Halaman CRUD dan UI didefinisikan di appjson/*.json, skema database di schema/*.json." },
+          { "type": "heading", "level": 3, "text": "Termasuk" },
+          { "type": "list", "items": [
+            "Auth JWT + role-based menu",
+            "CRUD engine (table + form builder)",
+            "Multi-cabang (users + datacabang)",
+            "Studio: CRUD & database manager",
+            "Contoh resource: categories"
+          ]},
+          { "type": "heading", "level": 3, "text": "Menambah CRUD baru" },
+          { "type": "list", "items": [
+            "Buat schema/schema-name.json",
+            "Buat appjson/page-name.json",
+            "Tambahkan path ke config/menu-config.json",
+            "npm run menu:sync lalu restart server"
+          ]}
+        ]
+      }
+    ]
+  },
+  "options": {
+    "roles": ["super_admin", "admin", "studio_admin", "viewer"]
+  }
+}

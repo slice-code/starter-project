@@ -1,0 +1,29 @@
+{
+  "name": "users",
+  "label": "Pengguna",
+  "primaryKey": "id",
+  "fields": [
+    { "name": "id", "type": "number", "autoIncrement": true, "required": true },
+    { "name": "name", "type": "text", "required": true },
+    { "name": "email", "type": "email", "required": true },
+    {
+      "name": "role",
+      "type": "enum",
+      "required": true,
+      "options": [
+        { "value": "super_admin", "label": "Owner" },
+        { "value": "admin", "label": "Administrator Cabang" },
+        { "value": "studio_admin", "label": "Developer" },
+        { "value": "viewer", "label": "Viewer" }
+      ]
+    },
+    { "name": "phone", "type": "text" },
+    { "name": "status", "type": "enum", "defaultValue": "active", "options": [
+      { "value": "active" },
+      { "value": "inactive" }
+    ]},
+    { "name": "kode_cabang", "type": "text", "required": false, "label": "Kode Cabang" },
+    { "name": "password", "type": "password", "required": true }
+  ],
+  "timestamps": { "createdAt": "created_at", "updatedAt": "updated_at" }
+}

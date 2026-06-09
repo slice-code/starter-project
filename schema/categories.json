@@ -1,0 +1,21 @@
+{
+  "name": "categories",
+  "label": "Kategori",
+  "primaryKey": "id",
+  "fields": [
+    { "name": "id", "type": "number", "autoIncrement": true, "required": true },
+    { "name": "nama", "type": "text", "required": true, "label": "Nama" },
+    { "name": "kode", "type": "text", "label": "Kode", "maxLength": 32 },
+    { "name": "keterangan", "type": "text", "label": "Keterangan" },
+    {
+      "name": "aktif",
+      "type": "enum",
+      "defaultValue": "1",
+      "options": [
+        { "value": "1", "label": "Aktif" },
+        { "value": "0", "label": "Nonaktif" }
+      ]
+    }
+  ],
+  "timestamps": { "createdAt": "created_at", "updatedAt": "updated_at" }
+}

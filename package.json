@@ -1,0 +1,74 @@
+{
+  "name": "admin-starter",
+  "version": "1.0.0",
+  "description": "JSON-driven admin starter template (el.js + layout.js + CoreApp)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "dev:db-up": "docker compose -f docker-compose.dev.yml up -d",
+    "dev:db-down": "docker compose -f docker-compose.dev.yml down",
+    "dev:db-reset": "docker compose -f docker-compose.dev.yml down -v && docker compose -f docker-compose.dev.yml up -d",
+    "dev:setup": "npm run dev:db-up && cp .env.dev .env.local && echo 'Dev ready — run: npm run dev'",
+    "dev:full": "npm run dev:db-up && sleep 3 && nodemon server.js",
+    "seed": "npm run seed:bootstrap && npm run menu:sync",
+    "seed:bootstrap": "node scripts/seed-bootstrap.js",
+    "seed:developer": "node scripts/seed-developer-account.js",
+    "menu:sync": "node scripts/sync-menu-config.js",
+    "menu:sync:dry": "node scripts/sync-menu-config.js --dry-run",
+    "menu:view": "node scripts/read-menu-tables.js"
+  },
+  "nodemonConfig": {
+    "watch": [
+      "server.js",
+      "load-env.js",
+      "database.js",
+      "database",
+      "auth.js",
+      "upload-service.js",
+      "upload-types.js",
+      "role-permissions.js",
+      "menu-config-service.js",
+      "company-profile-service.js",
+      "app-config.js",
+      "config",
+      "appjson",
+      "schema",
+      "services"
+    ],
+    "ext": "js,json",
+    "delay": 400,
+    "ignore": [
+      "node_modules",
+      "data",
+      "files",
+      "backups",
+      "library",
+      "layouting",
+      "migrations",
+      "planning"
+    ]
+  },
+  "keywords": [
+    "admin",
+    "crud",
+    "json-driven",
+    "starter"
+  ],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.16.0",
+    "sharp": "^0.34.5",
+    "sql.js": "^1.14.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

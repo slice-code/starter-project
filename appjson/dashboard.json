@@ -1,0 +1,15 @@
+{
+  "path": "/",
+  "type": "page",
+  "config": {
+    "type": "page",
+    "gap": "0",
+    "children": [
+      { "type": "admin-dashboard" }
+    ]
+  },
+  "options": {
+    "pageContentPadding": "1.25rem",
+    "roles": ["super_admin", "admin", "studio_admin", "viewer"]
+  }
+}

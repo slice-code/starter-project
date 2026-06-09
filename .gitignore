@@ -1,0 +1,10 @@
+arms_cache/
+.qoder/
+*.txt
+node_modules/
+data.db
+env.local
+.env
+.env.local
+plan.txt
+documentation/

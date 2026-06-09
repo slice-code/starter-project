@@ -1,0 +1,39 @@
+# Dependencies
+node_modules
+npm-debug.log
+
+# Version control
+.git
+.gitignore
+
+# Database files (SQLite not used in production)
+data.db
+*.corrupt*
+data.db.corrupt*
+
+# Documentation
+*.md
+!README.md
+
+# IDE and editor files
+.qoder
+.vscode
+.idea
+
+# Cache and temporary files
+arms_cache
+tmp
+*.tmp
+
+# Environment files (security)
+.env
+.env.local
+.env.example
+
+# Development-only directories
+planning
+cheatsheet
+images
+
+# Upload data (mounted as volume, not built into image)
+data/uploads

@@ -1,0 +1,18 @@
+{
+  "name": "datacabang",
+  "label": "Cabang",
+  "primaryKey": "id",
+  "timestamps": { "createdAt": "created_at", "updatedAt": "updated_at" },
+  "fields": [
+    { "name": "id", "type": "number", "autoIncrement": true },
+    { "name": "kode_cabang", "type": "text", "required": true },
+    { "name": "nama_cabang", "type": "text", "required": true },
+    { "name": "kota", "type": "text" },
+    { "name": "provinsi", "type": "text" },
+    { "name": "alamat", "type": "textarea" },
+    { "name": "telepon", "type": "text" },
+    { "name": "email", "type": "email" },
+    { "name": "urutan", "type": "number", "defaultValue": 0 },
+    { "name": "status", "type": "text", "defaultValue": "aktif" }
+  ]
+}
